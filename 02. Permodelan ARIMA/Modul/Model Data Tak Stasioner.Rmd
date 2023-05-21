@@ -1,0 +1,562 @@
+---
+title: " "
+author: "Leonardo Valentino Kosasih, S.Aktr."
+header-includes:
+    - \usepackage{titling}
+    - \usepackage{tcolorbox}
+    - \tcbuselibrary{listings, theorems}
+    - \usepackage{enumitem}
+    - \usepackage{setspace}\onehalfspacing
+    - \usepackage{fancyhdr}  
+    - \usepackage{hyphenat}
+    - \usepackage{eso-pic,graphicx}  
+    - \usepackage{transparent}
+    - \usepackage{draftwatermark}
+    - \usepackage{amsmath}
+    - \usepackage{hyperref}
+    - \pagestyle{fancy}  
+    - \usepackage{caption}
+    - \usepackage{theorem}
+    - \usepackage[bahasai]{babel}
+    - \fancyhead[LE,RO]{Modul Pratikum Analisis Deret Waktu AK-2281}  
+output: 
+  pdf_document: 
+    toc_depth: 2
+    fig_height: 3
+    fig_width: 4
+    extra_dependencies : awesomebox
+    number_sections: yes
+    fig_caption: yes
+    latex_engine: xelatex
+toc-title: "Daftar Isi"
+classoption: a4paper
+---
+\renewcommand{\theequation}{\thesection.\arabic{equation}}
+\counterwithin{equation}{section}
+\def\figurename{Gambar}
+\pagenumbering{gobble}  
+\newtcbtheorem[auto counter]{jp}{Jurnal Praktikum}{fonttitle=\bfseries\upshape, fontupper=\slshape, arc=0mm, colback=blue!5!white,colframe=blue!75!black}{jurnal}
+<!-- \begin{center} -->
+<!-- \Huge Modul Praktikum Analisis Deret Waktu \\  -->
+<!-- \Huge AK 2281 - Analisis Deret Waktu \\ -->
+<!-- \huge \textbf{Modul 1 - Konsep Dasar Deret Waktu} \\ -->
+<!-- \includegraphics{logo.png} -->
+<!-- \end{center}  -->
+<!-- \begin{center} -->
+<!-- \Large Pengajar : Dr. Sandy Vantika, S.Si., M.Si.  \\ -->
+<!-- \Large Koordinator Praktikum : Leonardo Valentino Kosasih, S.Aktr.    \\ -->
+<!-- \Large Kontak : +62 823 8599 5958  -->
+<!--  \end{center} --> 
+<!-- \SetWatermarkText{" "} -->  
+\hyphenchar\font=-1
+\Large Modul Praktikum Analisis Deret Waktu - AK2281   terdiri atas 5 buah modul sebagai berikut :  \begin{enumerate} 
+\item Modul 1 : Konsep Dasar Deret Waktu  
+\item Modul 2 : Model Data Tak Stasioner  
+\item Modul 3 : Model Musiman  
+\item Modul 4 : Model Heteroskedastik  
+\item Modul 5 : Pengayaan
+\end{enumerate}  
+\begin{tcolorbox}[colback=blue!5!white,colframe=blue!75!black,title = Tim Praktikum AK2281]
+\normalsize Koordinator Praktikum : Leonardo V. Kosasih, S.Aktr. \\
+Tim Penyusun Modul Praktikum :
+\begin{center}
+\begin{tabular}{ lcclc }
+Ang Ditra Alif Pradana & 10120046 & & Matthew Alfarazh & 10820021\\
+Feby Yolanda & 10819028 & & Pamella Cathryn & 10820033\\
+Ferdinan Gratius Budisatya & 10819041 & &Jeremy & 10820034\\
+Jevan Christopher Aryento & 10820010 & &Aloysius Vincent & 10820038\\
+Shelly Delfiani & 10820014 & &Kevin Christ Aditya & 10820039\\ 
+Binsar Gunadi Simbolon & 10820017 & &Shafina Aulia Kusuma Putri & 10820049 \\
+\end{tabular} \\
+\end{center}
+Desain sampul oleh : Matthew Alfarazh - 10820021
+\end{tcolorbox}
+\SetWatermarkText{ \includegraphics[angle=-45]{background.png}}
+\newpage 
+\pagenumbering{roman}
+\tableofcontents
+\newpage
+\setcounter{page}{1}
+\pagenumbering{arabic}
+\begin{center}
+\Huge \textbf{Modul 2}
+\end{center}
+\Large \textbf{Tujuan}:  \normalsize
+\begin{enumerate}
+\item Menganalisis data real deret waktu dan memodelkannya.  
+\item Memahami langkah-langkah iterasi Box-Jenkins,  
+\end{enumerate}
+\normalsize Pada modul kali ini ada beberapa *library* yang akan digunakan sebagai berikut :  
+```{r Library, echo=TRUE, message=FALSE, warning=FALSE}
+# Untuk membaca data dengan format Excel
+library(readxl) 
+
+# Untuk mengubah data menjadi Time Series, 
+# membuat plot ACF, plot PACF, Model ARIMA dan ADF Test
+library(tseries)
+
+# Untuk membuat rolling means
+library(zoo)
+
+# Untuk memgolah data 
+library(dplyr)
+library(tidyverse)
+
+# Untuk melihat signifikansi koefisien dari parameter
+library(lmtest) 
+
+# Untuk memprediksi data dari model  
+library(forecast)
+
+# Untuk membuat grafik
+library(ggplot2)
+```
+
+Sedangkan data yang akan diolah adalah data Total Barang Dalam Negri yang dimuat di Tanjung Priok. Data diperoleh dari \url{bps.go.id} pada bulan Juni tanggal 13 tahun 2020.
+\begin{center}
+\href{https://drive.google.com/uc?export=download&id=1Ntzal7QcnzcHQBijoCvMI7Xtn5uaV0d5}{\textcolor{blue}{TEKAN UNTUK MENGUNDUH DATA}}
+\end{center}
+\newpage    
+\Huge \textbf{Alur Pemodelan}  
+\normalsize Data deret waktu yang baik adalah data yang memiliki ukuran setidaknya 50 observasi. Jika kurang dari 50 observasi maka hasil pengolahan data deret waktu dapat menjadi sangat bias. Selain jumlah data, perlu diperhatikan kualitas dari data juga perlu diperhatikan. Secara umum, alur pemodelan deret waktu dapat dibagi menjadi berikut : 
+\begin{enumerate}
+\item Analisis Data atau EDA (\textit{Exploratory Data Analysis})\\
+Pada bagian ini akan dihitung statistik deskriptif dari data (nilai minimum, maksimum, rataan, median dan lainnya) dan dapat dilihat pola dari data. Kelengkapan data juga harus diperiksa. Umumnya, data deret waktu dilaporkan secara runtut (per bulan, per hari dan seterusnya).
+\item Mempersiapkan data atau \textit{Data Processing}\\
+Pada bagian ini dapat dilakukan \textit{imputation} jika terdapat data yang kosong dan dapat dilakukan transformasi ataupun diferensiasi data. Dalam mempersiapkan data sebelum membangun model, ada baiknya pula untuk membagi data menjadi 2 bagian dengan rasio 80:20 dengan 80\% data pertama akan disebut dengan data \textit{training} dan 20\% berikutnya akan disebut dengan data \textit{validation/test}. Tujuan dari membagi data ini adalah untuk membagi data yang akan digunakan untuk \textbf{membangun} model dan untuk \textbf{menguji} model untuk menghindari \textit{overfitting} dan juga untuk melihat performa model dalam melakukan prakiraan/\textit{forecasting} pada data yang digunakan untuk \textbf{membangun} model dan dari data yang "belum diketahui". Hasil pengujian model dengan menggunakan data \textit{training} disebut dengan \textit{in-sample error} sedangkan jika menggunakan data \textit{validation/test} disebut dengan \textit{out-of-sample error} 
+\item Identifikasi Model  \\
+Khusus untuk data deret waktu, akan ditinjau perilaku dari autokorelasi dan autokorelasi parsial dari data. Pada bagian ini akan dipilih beberapa kandidat model yang dirasa cocok untuk memodelkan data.
+\item Estimasi Parameter  \\
+Pada bagian ini akan dianalisis parameter yang telah ditaksir. Idealnya, parameter yang dipilih signifikan terhadap model dan juga memiliki jumlah parameter yang sedikit pula.  
+Misalkan $\hat{\beta}$ adalah taksiran dari suatu parameter dan $\beta$ adalah nilai parameter yang sebenarnya. Taksiran yang baik adalah taksiran yang memenuhi sifat-sifat berikut: 
+\begin{enumerate}
+\item Tak bias: ekspektasi dari taksiran parameter adalah nilai parameter sebenarnya yang secara matematis ditulis sebagai berikut \begin{equation}E\left[ \hat \beta \right] = \beta\end{equation}
+\item Konsisten: untuk data yang semakin banyak, maka peluang dari suatu taksiran parameter dengan nilai dari parameter sebenarnya akan mendekati 0 (sangat mirip). Secara matematis ditulis sebagai berikut \begin{equation} \lim_{n\to \infty} \Pr\left(|\hat{\beta}_n - \beta| \leq \delta \right) = 1 \quad \forall \delta >0 \end{equation} 
+\item Efisien: ukuran efisiensi yang umum digunakan adalah \textit{Mean Squared Error} yang secara matematis ditulis sebagai berikut: \begin{equation}E\left[\left(\hat{\beta} - \beta\right)^2\right]\end{equation}
+\end{enumerate}
+\item Uji Diagnostik \\
+Pada bagian ini akan diperiksa perilaku galat yang dihasilkan oleh model. Ada 3 asumsi yang harus dipenuhi oleh galat yaitu:
+\begin{enumerate}
+\item Berdistribusi Normal dengan rataan 0 dan variansi $\sigma^2_\varepsilon$ atau $\varepsilon_t \sim N(0,\sigma^2_\varepsilon) \quad \forall t$
+\item Saling bebas
+\item Homoskedastis: variansi konstan
+\end{enumerate}
+\item Penaksiran atau \textit{Forecasting}\\
+Pada bagian ini akan dilakukan penaksiran titik dan taksiran selang dengan tingkat signifikansi tertentu.
+\end{enumerate}  
+Sedangkan pemodelan iterasi Box-Jenkins adalah
+\begin{enumerate}
+\item Identifikasi Model 
+\item Pembuatan Model (\textit{Model Fitting})
+\item Uji Diagnostik Model
+\end{enumerate}  
+Dikatakan itereasi karena jika galat dari model tidak memenuhi sifat-sifat galat yang telah disampaikan di atas, maka perlu dilakukan kembali identifikasi model.  
+Catatan: penulisan angka ribuan akan digunakan tanda koma (,) sedangkan untuk menuliskan
+angka desimal akan digunakan tanda titik(.).  
+\newpage  
+  
+# EDA  
+Pada bagian ini akan dilihat grafik data, pola yang dibangun dari *rolling mean*, dan juga stastik deskriptif dari data  
+```{r Selayang Pandang Data, echo=TRUE, fig.align='center', fig.height=4, fig.width=8, message=FALSE, warning=FALSE}
+# Memanggil Data  
+data <- read_excel("Data Total Barang.xlsx", 
+                   sheet = "Tanjung Priok", 
+                   col_types = c("date", "numeric"))
+data <- data %>% mutate(
+  rolling_mean_7 = rollmean(data$`Total Barang (Ton)`, k = 7, fill = NA))
+
+# Mengelompokan data
+df <- data %>%
+  select(Waktu, `Total Barang (Ton)`,rolling_mean_7) %>%
+  gather(key = "variabel", value = "value", -Waktu)
+
+# Membuat grafik data
+ggplot(df, aes(x = Waktu, y = value, group = variabel)) +
+  geom_line(aes(linetype = variabel, color = variabel)) +
+  geom_hline(yintercept = mean(data$`Total Barang (Ton)`), color="brown1")+
+  scale_linetype_manual(values = c('dashed', 'solid', 'dashed'))+
+  scale_color_manual(values = c('red','darkslategrey')) +
+  labs(title = 'Grafik Total Barang (Ton) di Tanjung Priok 2006-2020',
+       x = "Waktu", y = 'Total Barang (Ton)')
+
+
+# Statistik Deskriptif
+summary(data) 
+```  
+Dapat dilihat bahwa terdapat \textit{trend} naik dari tahun 2006 hingga tahun 2013 kemudian data mulai berfluktuasi di sekitar rataan. Dapat dilihat juga bahwa rata-rata bergulir per 7 hari mengikuti pola dari data. 
+  
+Akan dilihat pula grafik ACF dan PACF dari data  
+```{r acf data, fig.align='center'}
+acf(data$`Total Barang (Ton)`, main ='Grafik ACF Data',lag.max = 36)
+```
+
+```{r pacf data, fig.align='center'}
+pacf(data$`Total Barang (Ton)`, main ='Grafik PACF Data',lag.max = 36)
+```
+Dapat dilihat pada grafik ACF nilai autokorelasi signifikan hingga lag ke-36 dan grafik PACF signifikan hingga lag ke-3. Nilai autokorelasi yang signifikan hingga suatu lag yang besar, menjadi salah satu indikasi bahwa data tidak stasioner.    
+  
+# Mempersiapkan Data  
+Berikutnya data akan dibagi menjadi data *train* dan data *validation*.     
+```{r Validation Test, echo=TRUE} 
+# Membuat data train dan validation dan mengubahnya
+# menjadi data time series
+
+# dibutuhkan untuk menghasilkan data prediksi
+tpriok <- ts(data$`Total Barang (Ton)`)  
+
+# data yang akan digunakan untuk membuat model
+tpriok_train <- ts(data$`Total Barang (Ton)`[1:138]) 
+
+# data yang akan digunakan untuk memvalidasi model
+tpriok_test <-ts(data$`Total Barang (Ton)`[139:173]) 
+```
+Untuk langkah-langkah berikutnya, data yang akan diolah adalah data *train*.  
+
+Sebelum memilih model yang akan digunakan untuk melakukan prakira, ada baiknya juga dipilih suatu model yang paling sederhana yang disebut dengan *base model*. Untuk memudahkan, akan dibuat model yang merupakan rataan dari data sebagai *base model* dan akan dilihat performa dari *base model* tersebut.  
+```{r Base Model RMSE, echo=TRUE, message=FALSE, warning=FALSE}
+y_mean <- mean(tpriok_train)
+rmse_train <- mean((tpriok_train - y_mean)^2)^0.5
+rmse_train
+```
+```{r Base Model MAPE, echo=TRUE, message=FALSE, warning=FALSE}
+y_mean <- mean(tpriok_train)
+mape_train <- mean(abs((tpriok_train - y_mean))/tpriok_train)
+mape_train
+```
+Dapat dilihat bahwa RMSE (\textit{Root Mean Square Error}) dari *in-sample* sebesar 291,227.7 dan MAPE (\textit{Mean Absoulte Percentage Error}) sebesar 32.97 \%, sehingga model yang dipilih nanti harus memiliki nilai yang lebih kecil dari nilai tersebut.  
+  
+# Identifikasi Model  
+Dalam mengindentifikasi model, langkah pertama yang perlu dilakukan adalah memeriksa kestasioneran data. Salah satu caranya adalah dengan melakukan uji **Augmented Dickey Fuller Test**, yang berikutnya akan disebut dengan uji ADF. Uji ADF ini akan menguji apakah **unit root** pada model deret waktu bernilai kecil dari 1 atau tidak. **Unit root** inilah yang menjadi salah satu indikator apakah suatu data deret waktu stasioner atau tidak. Jika $H_0$ ditolak maka dapat ditarik kesimpulan bahwa data stasioner. Selain uji ADF, dapat pula dilihat pola dari grafik ACF data. Pada modul ini akan digunakan $\alpha = 0.05$. Selengkapnya mengenai uji ADF, dapat dilihat pada Lampiran \ref{app ADF}.
+  
+Akan dilakukan Uji ADF pada data  
+```{r uji uji, fig.align='center'}
+adf.test(tpriok_train) 
+acf(tpriok_train, main = 'Grafik ACF Data',lag.max = 36)
+```
+Dapat dilihat bahwa nilai *p-value* $> \alpha$ sehingga dapat disimpulkan bahwa **data tidak stasioner**. Hal ini didukung pula dengan nilai ACF yang masih signifikan hingga lag ke-36.  
+
+Karena data tidak stasioner, maka salah satu cara untuk membuat data menjadi stasioner adalah dengan melakukan diferensiasi data.   
+```{r Data Diferensiasi 1 Kali, echo=TRUE, fig.align='center', message=FALSE, warning=FALSE}
+tpriok_train_diff <- diff(tpriok_train)
+plot(tpriok_train_diff,
+     lwd = 2, 
+     main = 'Plot Data Diferensiasi 1 Kali ', 
+     xlab = "Waktu", ylab = "Nilai Diferensiasi Data")
+abline(h=mean(tpriok_train_diff),
+       lwd=2,lty = 2, 
+       col ='red')
+```
+Dapat dilihat bahwa data yang sudah didiferensiasi jauh lebih terlihat  stasioner dibandingkan dengan yang belum didiferensiasi. Untuk dapat mendukung argumen bahwa data sudah stasioner, akan dilakukan uji ADF dan akan dilihat pula grafik ACF-nya
+```{r acf dfif, fig.align='center'}
+adf.test(tpriok_train_diff)
+acf(tpriok_train_diff, main ='Grafik ACF Data Diferensiasi',
+    lag.max = 36)
+```
+Dapat dilihat bahwa *p-value* $< \alpha$ sehingga dapat disimpulkan bahwa model sudah stasioner. Terlihat pula bahwa plot ACF memiliki pola sinusoidal dan *cut-off* pada lag pertama.     
+\begin{jp}{}{}
+Bandingkan hasil di atas dengan melakukan transformasi \texttt{logaritma natural} atau dengan melakukan diferensiasi lagi. Menurut anda, dari 3 metode tersebut (logaritma natural, diferensiasi 2 kali dan diferensiasi 1 kali) metode mana yang lebih cocok untuk dilakukan. Apakah dari 3 metode tersebut menghasilkan data yang stasioner ? Adakah metode yang lebih baik diantara 3 metode tersebut ?  
+\end{jp}
+  
+Setelah data menjadi stasioner, berikutnya akan diidentifikasi model yang cocok pada data dengan melihat grafik ACF dan PACF data.  
+```{r pacf diffff, fig.align='center'}
+pacf(tpriok_train_diff, main ='Grafik PACF Data Diferensiasi', 
+     lag.max = 36)
+```
+Pada plot PACF dapat dilihat bahwa grafik *cut off* hingga lag ke-3.  
+  
+Dari grafik ACF dan PACF di atas, dapat disimpulkan model-model yang cocok adalah sebagai berikut:
+\begin{enumerate}
+\item ARIMA (3,1,1)
+\item ARIMA (3,1,0)
+\item ARIMA (2,1,1)
+\end{enumerate}  
+
+Untuk interpretasi model dapat diperoleh hasil yang berbeda dengan model di atas asalkan alasan/argumen yang diberikan masih bisa diterima. Model yang baik adalah model yang memiliki sifat **parsimoni**, yang berarti jika ada 2 buah model yang memiliki performa yang hampir mirip, maka model yang baik adalah model yang paling sederhana atau model dengan parameter yang paling sedikit. Untuk itu perlu dilakukan analisis lebih lanjut seperti melihat signifikansi dari parameter model, nilai AIC (\textit{Akaike's Information Criteria}) dari model dan uji diagnostik model pada ketiga kandidat model tersebut. 
+
+# Estimasi Parameter   
+Dalam melakukan estimasi parameter dapat dilakukan dengan menggunakan autokorelasi parsial ataupun dengan menggunakan metode galat kuadrat terkecil. Pada bagian ini akan dibahas mengenai metode galat kuadrat terkecil untuk model AR(1), dan MA(1).  
+  
+## AR
+Misalkan data $Y_t$ dengan $t \in \{1,2,\dots, n\}$mengikuti model AR(1). Maka persamaannya dapat ditulis sebagai berikut:  
+\begin{equation}
+\label{ar}
+Y_t - \mu = \phi(Y_{t-1}-\mu) + \varepsilon_t, \quad t \in \{2, \dots n\}
+\end{equation}  
+Esimasi dengan kuadrat terkecil diperoleh dengan meminimumkan jumlah kuadrat galat. Perhatikan bahwa persamaan (\ref{ar}) dapat ditulis ulang menjadi  
+\begin{equation}
+\label{error}
+\varepsilon_t = Y_t - \mu - \phi(Y_{t-1}-\mu), \quad t \{2, \dots n\}
+\end{equation}  
+dengan $\mu$ adalah rataan dari data.  
+Misalkan total jumlah kuadrat galat adalah $S_c(\phi, \mu)$. Maka secara matematis dapat ditulis menjadi :  
+\begin{equation}
+\label{tot error}
+S_c(\phi, \mu) = \sum_{t=2}^n \varepsilon_t^2 = \sum_{t=2}^n((Y_t - \mu) - \phi(Y_{t-1}-\mu))^2
+\end{equation}  
+Maka untuk memperoleh nilai parameter $\phi$ dan $\mu$ yang meminimumkan jumlah kuadrat galat ini (jumlah kuadrat ini disebut juga dengan **conditional sum of square error**, akan dihitung turunan parsial dari persamaan (\ref{tot error})  :
+\begin{align*}
+\frac{\partial S_c(\phi, \mu)}{\partial \phi} = \frac{\partial \sum_{t=2}^n \varepsilon_t^2}{\partial \phi} &= \frac{\partial \sum_{t=2}^n((Y_t - \mu) - \phi(Y_{t-1}-\mu))^2}{\partial \phi} \\
+&= -2  \sum_{t=2}^n(Y_t - \mu)(Y_{t-1}-\mu) +2 \sum_{t=2}^n\phi(Y_{t-1}-\mu)^2 = 0 \\
+&\Leftrightarrow \hat{\phi} = \frac{\sum_{t=2}^n(Y_t -\bar{Y})(Y_{t-1}-\bar{Y})}{\sum_{t=2}^n(Y_{t-1}-\bar{Y})^2}
+\end{align*}  
+Sedangkan untuk nilai parameter $\mu$ yang meminimumkan galat adalah :  
+\begin{align*}
+\frac{\partial S_c(\phi, \mu)}{\partial \mu} = \frac{\partial \sum_{t=2}^n \varepsilon_t^2}{\partial \mu} &= \frac{\partial \sum_{t=2}^n((Y_t - \mu) - \phi(Y_{t-1}-\mu))^2}{\partial \mu} \\
+&= \text{(Diserahkan kepada pembaca sebagai latihan)} \\ 
+&\Leftrightarrow \hat{\mu} \approx \frac{1}{1-\hat{\phi}}(\bar{Y} - \hat{\phi}\bar{Y}), \quad \text{untuk $n$ yang besar} 
+\end{align*}  
+  
+## MA  
+Misalkan data $Y_t$ dengan $t= \{1,2,\dots, n\}$mengikuti model MA(1). Maka persamaannya dapat ditulis sebagai berikut :  
+\begin{equation}
+\label{ma}
+Y_t  =\varepsilon_t -\theta\varepsilon_{t-1}, \quad t = 2, \dots n
+\end{equation}  
+Sehingga untuk **conditional sum of square error**-nya dapat ditulis dengan persamaan berikut : 
+\begin{equation}
+\label{sc ma}
+S_c(\theta) = \sum_{t=1}^n \varepsilon_t = \sum_{t=1}^n (Y_t + \theta Y_{t-1} +\theta^2 Y_{t-2} +\dots )^2
+\end{equation}
+Perhatikan bahwa persamaan (\ref{sc ma}) memiliki parameter yang tak linear. Sehingga dalam penentuannya perlu dilakukan dengan metode numerik.  
+  
+Salah satu alternatif lain adalah dengan menyusun ulang persaman (\ref{ma}) menjadi berikut :  
+\begin{equation}
+\label{enumerasi}
+\varepsilon_t = Y_t + \theta \varepsilon_{t-1}, \quad t \in \{1 \dots n\}
+\end{equation}  
+Idenya adalah dengan menaksir nilai $\boldsymbol{\theta}$ yang dapat meminimumkan galat. Umumnya diasumsikan nilai dari $\varepsilon_0 = 0$ (Mengapa?) sehingga dapat dihitung secara rekursif nilai dari parameter $\theta$.  
+  
+Penjelasan umum mengenai metode *Maximum Likelihood* dapat dilihat pada Lampiran \ref{MLE}
+  
+## Bagian R
+Berikut adalah kode untuk melakukan penaksiran parameter model  
+```{r Model, echo=TRUE, message=FALSE, warning=FALSE}
+# Metode default dari arima adalah kombinasi antara maximum likelihood 
+# dan conditional sum of square
+
+mod_1 <- arima(tpriok_train,order=c(3,1,1))
+mod_1
+mod_2 <- arima(tpriok_train,order=c(3,1,0))
+mod_2
+mod_3 <- arima(tpriok_train,order=c(2,1,1))
+mod_3
+mod_auto <- auto.arima(tpriok_train, max.p = 4,max.q = 4, 
+                       seasonal = FALSE, stationary = FALSE)
+mod_auto
+```
+Setelah melakukan penaksiran parameter, akan dipilih model yang paling cocok untuk memodelkan data. Ada 3 hal yang akan dipertimbangkan dalam memilih model yang paling cocok sebagai berikut:
+\begin{enumerate}
+\item Nilai AIC (\textit{Akaike's Information Criteria})
+\item Signifikansi parameter
+\item Parsimoni
+\end{enumerate}  
+Tentu saja selain 3 hal di atas, perbedaan antara performa model dengan *base model* dapat menjadi pertimbangan.  
+Nilai AIC didefinisikan dengan persamaan berikut: 
+\begin{equation}
+\label{AIC}
+AIC = -2\log({\textit{maximum likelihood}}) +2k
+\end{equation}
+Dengan \textit{maximum likelihood} diperoleh dari fungsi kepadatan peluang galat (umumnya dipilih distribusi normal dengan rataan 0 dan variansi $\sigma^2_\varepsilon$) dan $k$ adalah banyak parameter. Secara umum fungsi ini akan memberikan *penalty* yang lebih besar pada model yang memiliki banyak parameter. Model yang baik adalah model yang memiliki nilai AIC **terendah**.  
+Catatan: Alasan mengenai pemilihan model yang terbaik menggunakan AIC terendah karena pendefinisian persamaan AIC pada persamaan (\ref{AIC}). Jika pendefinisian nilai AIC tidak sama dengan persamaan (\ref{AIC}) maka model terbaik dapat berupa nilai AIC terbesar.   
+  
+Dapat dilihat bahwa model dengan AIC terkecil dimiliki oleh model ARIMA (3,1,2). Namun, dapat dilihat pula pada model ARIMA(2,1,1) memiliki AIC yang tidak jauh berbeda dengan AIC pada model ARIMA(3,1,2). sehingga akan dipilih model ARIMA(2,1,1) untuk dianalisis lebih lanjut.
+\begin{jp}{}{}
+Bagaimana dengan nilai AICc dan BIC dari 3 model tersebut? Apakah model dengan AIC terkecil juga memiliki nilai AICc dan nilai BIC terkecil juga? Jelaskan mengapa diperoleh hasil tersebut! 
+\end{jp}
+Berikutnya akan dibandingkan parameter model yang diperoleh dengan metode penaksiran parameter kuadrat galat terkecil  
+```{r}
+mod_1 <- arima(tpriok_train,order=c(2,1,1), method = 'CSS-ML')
+mod_1
+mod_1_css <- arima(tpriok_train,order=c(2,1,1), method = 'CSS')
+mod_1_css
+mod_1_ML <- arima(tpriok_train,order=c(2,1,1), method = 'ML')
+mod_1_ML
+
+```
+Dapat dilihat bahwa antara ketiga model memiliki parameter yang tidak jauh berbeda tetapi dapat dilihat bahwa $\sigma^2$ dari metode **conditional sum of square error** lebih besar dibandingkan metode yang lain. Sedangkan AIC model menggunakan penaksiran **maximum likelihood** ataupun kombinasi antara **maximum likelihood** dan **conditional sum of square error** tidak jauh berbeda. Sehingga untuk berikutnya akan dilakukan uji signifikansi dari model.  
+
+## Signifikansi dari Koefisien Parameter  
+Akan diperiksa siginifikansi parameter model  
+```{r Pemeriksaan Koefisien, echo=TRUE, message=FALSE, warning=FALSE}
+coeftest(mod_1) 
+coeftest(mod_1_css) 
+coeftest(mod_1_ML) 
+```
+Dapat dilihat bahwa masing-masing model ada parameter yang **tidak signifikan**. Sehingga dapat disimpulkan bahwa model yang dipilih kurang tepat untuk memodelkan data. Idealnya semua parameter signifikan pada model. Untuk dapat memperoleh model yang signifikan dapat dilakukan salah satu ataupun kombinasi dari hal-hal berikut : 
+\begin{enumerate} 
+\item Mengubah rasio data untuk \textit{training} dan \textit{testing}
+\item Melakukan diferensiasi data 
+\item Memilih model lain  
+\end{enumerate}  
+
+Penulisan persamaan dari model adalah sebagai berikut :  
+\begin{align*}
+\phi_2(B) (1-B)^1 Y_t &= \theta_1(B) \varepsilon_t \\
+(1-\phi_1B-\phi_2B^2)(1-B)Y_t &=(1-\theta_1B)\varepsilon_t \\
+(1-\phi_1B-\phi_2B^2-B+\phi_1B^2+\phi_2B^3)Y_t&=(1-\theta_1B)\varepsilon_t \\
+(1-(1+\phi_1)B-(\phi_2-\phi_1)B^2+\phi_2B^3)Y_t &= \varepsilon_t - \theta_1\varepsilon_{t-1}\\
+Y_t-(1+\phi_1)Y_{t-1}-(\phi_2-\phi_1)Y_{t-2}+\phi_2Y_{t-3}&=\varepsilon_t - \theta_1\varepsilon_{t-1}
+\end{align*}
+\begin{equation}
+\label{model_akhir}
+Y_t=(1+\phi_1)Y_{t-1}-(\phi_2-\phi_1)Y_{t-2}+\phi_2Y_{t-3}+\varepsilon_t - \theta_1\varepsilon_{t-1}
+\end{equation}
+(Perhatikan dokumentasi dari fungsi \texttt{arima}).  
+Perhatikan bahwa koefisien parameter dari $\phi_1$, dan $\phi_2$ tidak signifikan sehingga dalam penulisan persamaan modelnya hanya menuliskan koefisien parameter dari $\phi_2$ dan $\theta_1$. Sehingga persamaan (\ref{model_arima}) dapat ditulis sebagai berikut : 
+\begin{equation}
+\label{model_arima}
+Y_t=Y_{t-1}+\varepsilon_t  -0.7509917\varepsilon_{t-1}
+\end{equation}  
+
+Berikutnya akan dilihat performa model sebagai berikut 
+```{r Accuracy Trainnning}
+accuracy(mod_1)
+```
+Definisi dari ukuran dari tiap performa model dapat dilihat pada Lampiran \ref{Error Metric}. Dapat dilihat bahwa RMSE dari model sebesar 152,764 dan MAPE dari model sebesar 12.78% yang nilai tersebut jauh lebih kecil dibandingkan nilai RMSE dan MAPE dari \textit{base model}.  
+  
+# Uji Diagnostik   
+Model deret waktu dikatakan cocok jika galat memenuhi sifat-sifat berikut:
+\begin{enumerate}
+\item Berdistribusi Normal dengan rataan 0 dan variansi $\sigma^2_\varepsilon$ atau $\varepsilon_t \sim N(0,\sigma^2_\varepsilon) \quad \forall t$
+\item Saling bebas 
+\item Homoskedastis: variansi konstan
+\end{enumerate}
+
+Untuk melakukan uji diagnostik dapat dilakukan dengan bantuan grafik dan juga uji statistik seperti Ljung-Box seperti berikut : 
+```{r Model Diagnostic, echo=TRUE, fig.align='center', message=FALSE, warning=FALSE, fig.cap='Model Diagnostik dari Data Prediksi'}
+checkresiduals(mod_1)
+```
+Perhatikan bahwa *p-value* $<\alpha$ sehingga dapat disimpulkan bahwa data tidak saling bebas. Hal ini diperkuat dari plot ACF yang signifikan pada lag ke 6,19 dan juga 12. Dapat dilihat juga bahwa distribusi dari residual hampir menyerupai distribusi normal dan grafik dari galat dapat diasumsikan bahwa galat dari residual 0 dan variansinya konstan.   
+
+\begin{jp}{}{}
+Lakukanlah uji Kolmogorov-Smirnov, Anderson-Darling, Cramer von Mises, Jarque-Bera, dan Shapiro-Wilk pada data residual dengan menggunakan fungsi \texttt{residuals(mod\_1)}. Apakah dari ke-5 uji tersebut ada yang menolak bahwa data residual berdistribusi normal?
+\end{jp}
+  
+# **Forecasting**
+Sebelum dilakukan **forecasting** akan dilihat terlebih dahulu performa model untuk memodelkan data **validation** terlebih dahulu.  
+```{r validation}
+validation <- forecast(tpriok_train, model = mod_1, h = length(tpriok_test))
+actual <- as.vector(tpriok_test)
+ape_validation <- abs((as.vector(validation$mean) -actual)/actual)
+mape_validation <- mean(ape_validation)
+mape_validation
+```
+Dapat dilihat bahwa MAPE dari model sebesar 16.87% yang lebih besar daripada MAPE yang diperoleh sebelumnya. Untuk memprediksi data di depan dapat digunakan fungsi dari library forecast yakni \texttt{forecast}. Perlu diperhatikan data apa yang akan diprediksi dan model yang akan digunakan. 
+  
+```{r Prediksi, message=FALSE, warning=FALSE,fig.align='center'}
+fc <- forecast(tpriok, model = mod_1, h = 5)
+summary(fc)
+plot(fc, , main = 'Prakiraan Model ARIMA')
+```
+Dapat dilihat bahwa hasil prediksi model tidak terlalu mengikuti data yang ada.  
+
+# Kesimpulan  
+Model yang dipilih untuk memodelkan data Total Barang di Pelabuhan Tanjung Priok adalah ARIMA $(2,1,1)$ dan memiliki MAPE sebesar $\approx 12\%$. Meskipun MAPE model bernilai kecil, namum model tidak mengikuti data, sehingga model ini kurang cocok digunakan untuk memprediksi data. Akan lebih baik jika dipilih model lain.      
+
+\begin{jp}{}{}
+Lakukan pemodelan deret waktu menggunakan data yang terdapat pada sheet Tanjung Perak dan juga semua tugas jurnal praktikum yang sebelumnya !   
+\end{jp}
+  
+# Daftar Pustaka  
+Cryer, J., & Chan, K. (2011). Time series analysis. New York: Springer. 
+Guidolin, M., &amp; Pedio, M. (2018). Essentials of Time Series for Financial Applications. Academic Press. 
+Klugman, S. A., Panjer, H. H., &amp; Willmot, G. E. (2019). In Loss models: From data to decisions (pp. 203–218). essay, John Wiley &amp; Sons, Inc. 
+Wei, W. W. S. (1990). Time series analysis: Univariate and multivariate methods. Redwood City, Calif: Addison-Wesley Pub.  
+\newpage  
+\appendix
+\begin{center} \Huge \textbf{Lampiran} \normalsize 
+\end{center}
+\section{\textit{Backshift Operator}}
+\label{Backshift}
+Pada analisis deret waktu ada suatu notasi yang sering digunakan untuk mempermudah merumuskan persamaan model yakni **Backshift Operator**. Perumusannya sangat sederhana yakni sebagai berikut :  $$BY_t = Y_{t-1}$$ Secara sederhana, $B$ berlaku sebagai operator. Sehingga pada model AR($p$) dapat ditulis seperti berikut :  
+\begin{equation}
+\label{backshift ar}
+\phi (B) Y_t = \varepsilon_t
+\end{equation}
+dengan $\phi (B) =(1-\phi_1B-\dots- \phi_p B^p)$.  
+Sedangkan untuk model MA($q$) dapat ditulis sebagai berikut :  
+\begin{equation}
+\label{backshift ma}
+Y_t = \theta(B) \varepsilon_t
+\end{equation}
+dengan $\theta (B) =(1-\theta_1B-\dots- \theta_q B^q)$.  
+Secara umum untuk model ARIMA$(p,d,q)$ dapat ditulis dengan persamaan berikut:
+\begin{equation}
+\phi (B) (1-B)^d Y_t = \theta (B)\varepsilon_t
+\end{equation}
+
+\newpage 
+\section{Uji ADF}  
+\label{app ADF}
+Didefinisikan suatu persamaan deret waktu yang mengikuti model AR($p$) dengan \textit{drift} sebagai berikut:
+\begin{equation}
+\label{adf_1} 
+y_t = \mu + \sum_{i=1}^p \phi_i y_{t-i} + \varepsilon_t
+\end{equation}
+Jika diasumsikan $p=1$ maka, uji Augmented Dicky Fuller akan sama dengan uji Dicky Fuller. Sehingga uji hipotesis yang dilakukan adalah sebagai berikut
+\begin{align*}
+H_0 &: \phi_1 = \dots = \phi_k = 1 \\
+H_1 &: \phi_1 \text{ hingga } \phi_k \text{ tidak sama dengan } 1
+\end{align*}
+Jika $H_0$ ditolak, maka data dapat dikatakan stasioner (karena tidak ada efek dari \textit{unit root}). Untuk nilai statistik hitung, pembaca disarankan untuk membaca \textit{Probability \& Statistics for Engineers \& Scientists} karangan Walpole, Mayers, Ye Subbab 12.6 terkhusus pada bagian \textit{Partial F-Tests on Subsets of Coefficients}. (Hal ini tidak dibahas lebih lanjut karna akan dipelajari pada kuliah AK3182 Model Linear).  
+\newpage
+\section{\textit{Error Metrics}}
+\label{Error Metric}
+Salah satu cara untuk menentukan model yang paling baik untuk memodelkan data adalah dengan menggunakan \emph{error metric}. \emph{Error metric} adalah cara untuk mengkuantifikasi ketepatan hasil prakiraan model terhadap data asli. Nilai \emph{error metric} yang kecil menandakan model yang digunakan baik dalam memodelkan data. Pada modul ini, \emph{error metric} yang akan dibahas adalah \textbf{MAE}, \textbf{MAPE}, \textbf{MSE}, dan \textbf{RMSE}. Pada bagian ini, akan digunakan beberapa notasi sebagai berikut:
+\begin{enumerate}
+\item $n$: ukuran data
+\item $Y_t$: data ke-$t$ 
+\item $\hat{Y}_t$: data prakiraan model
+\end{enumerate}
+\subsection{MAE}  
+MAE (\emph{Mean Absolute Error}) menghitung rataan dari nilai mutlak dari selisih nilai prakira model dan data asli pada suatu waktu tertentu. Nilai MAE diperoleh dengan persamaan:
+\begin{align}
+MAE=\frac{\sum_{t=1}^{n}|\hat{Y}_{t}-Y_{t}|}{n}
+\end{align}
+Kelemahan dari parameter MAE adalah ketidakmampuan untuk menentukan apakah \emph{error} dari model besar atau kecil karena \emph{error} yang kecil dari nilai data yang besar akan menghasilkan nilai MAE yang besar. MAE juga sulit mendeteksi \emph{error} yang besar dengan frekuensi sedikit, sehingga pengambilan keputusan yang hanya berdasarkan MAE sulit dilakukan. Lebih jauh, MAE tidak dapat mendeteksi apakah prakiraan dari model lebih rendah atau lebih besar dari nilai data yang sebenarnya. Pengembangan dari MAE adalah MAPE.
+\subsection{MAPE}  
+MAPE (\emph{Mean Absolute Percentage Error}) menghitung rataan dari persentase nilai mutlak dari selisih nilai prakira model dan data asli terhadap data asli pada suatu waktu tertentu. Nilai MAPE diperoleh dengan persamaan:
+\begin{align}
+MAPE=\frac{1}{n}\sum_{t=1}^{n}\frac{|\hat{Y}_{t}-Y_{t}|}{Y_{t}}\times 100\%
+\end{align}
+MAPE memberikan gambaran keakuratan model yang lebih baik daripada MAE dengan membandingkan \emph{error} model terhadap data asli. MAPE tidak cocok digunakan ketika terdapat nilai 0 atau nilai ekstrim pada data. Data dengan nilai 0 yang terlalu banyak akan menyebabkan nilai MAPE yang terlalu besar sehingga tidak baik untuk menguji keakuratan data. Selain itu, seperti MAE, MAPE kurang baik dalam mendeteksi pencilan.
+\subsection{MSE}
+MSE (\emph{Mean Squared Error}) menghitung rataan dari kuadrat selisih nilai prakira model dan data asli pada suatu waktu tertentu. Nilai MSE diperoleh dengan persamaan:
+\begin{align}
+MSE=\frac{\sum_{t=1}^{n}(\hat{Y}_{t}-Y_{t})^{2}}{n}
+\end{align}
+Penggunaan kuadrat pada MSE menyebabkan data pencilan akan lebih berpengaruh pada nilai MSE. MSE memiliki kelemahan yang sama dengan MAE, yaitu sulit menentukan apakah \emph{error} dari data besar atau kecil berdasarkan nilai MSE, namun tidak terpengaruh nilai data 0 yang merupakan kelemahan MAPE. Selain itu, penambahan kuadrat pada persamaan MSE menyebabkan satuan data MSE berbeda dengan satuan data asli.
+\subsection{RMSE}
+RMSE (\emph{Root Mean Squared Error}) adalah akar dari MSE. Persamaan RMSE didefinisikan sebagai berikut:
+\begin{align}
+RMSE=\sqrt{MSE}
+\end{align}
+RMSE menghilangkan efek kuadrat dari MSE sehingga satuan dari RMSE menjadi sama dengan satuan data. RMSE dapat dibandingkan dengan MAE untuk mengetahui efek pencilan jika terdapat pencilan pada data.
+\newpage
+\section{\textit{Maximum Likelihood Estimator}}
+\label{MLE}
+Salah satu metode penaksiran parameter dari suatu distribusi yang sudah diasumsikan terlebih dahulu adalah metode \textit{Maximum Likelihood Estimator} (MLE). Ide dari teknik ini adalah memaksimumkan fungsi \textit{likelihood}, yaitu fungsi yang menyatakan kebolehjadian (\textit{likelihood}) sampel acak terobservasi.  
+
+Misalkan sampel acak $\mathbf{y} = (y_1, y_2, \cdots, y_n)$ berasal dari suatu distribusi tertentu dengan parameter dari fungsi peluang tersebut adalah $\boldsymbol{\beta} = (\beta_1, \beta_2, \cdots, \beta_n)^T$, yaitu $f(\mathbf{y}; \boldsymbol\beta)$. Maka dapat diperoleh fungsi peluang bersama dari sampel acak tersebut adalah: 
+\begin{equation}
+f_n(\mathbf{y}, \boldsymbol\beta) = \prod_{k=1}^{n} f(y_k; \boldsymbol{\beta})
+\end{equation}  
+Dari sampel acak yang diperoleh, metode ini akan mencari nilai parameter yang mungkin sedemikian sehingga fungsi \textit{likelihood} berikut bernilai maksimum. Fungsi \textit{likelihood} didefinisikan sebagai berikut
+\begin{equation}
+\mathcal{L}(\boldsymbol{\beta} ; \mathbf{y}) = \prod_{k=1}^{n} f(\boldsymbol{\beta}; y_k)
+\end{equation}
+Nilai $\boldsymbol{\beta}$ yang memaksimumkan $\mathcal{L}$, notasikan $\hat{\boldsymbol{\beta}}$, menjadi hasil estimasi dari teknik ini.
+
+Jika $\mathcal{L}$ dapat diturunkan, maka uji turunan dapat dilakukan untuk mencari nilai maksimum. Kita juga dapat bekerja dengan fungsi \textit{log-likelihood},
+\begin{equation}
+\ell(\boldsymbol{\beta}; \mathbf{y}) = \ln \mathcal{L}(\boldsymbol{\beta}; y).
+\end{equation}
+Turunan pertama fungsi \textit{log-likelihood} relatif lebih mudah dicari dibanding fungsi $\mathcal{L}$.
+
+Estimator yang diperoleh dari metode estimasi \textit{likelihood} maksimum akan bersifat konsisten, efisien, takbias secara asimtotik, dan invarian.
+
+Pada modul ini, fungsi \texttt{arima} yang Anda gunakan akan melakukan estimasi parameter dengan teknik estimasi \textit{likelihood} maksimum jika Anda menambahkan argumen $\texttt{method = 'ML'}$. Untuk mempelajari lebih lanjut mengenai estimasi parameter ARMA$(p,q)$ dengan metode MLE, silakan baca pada \href{https://jeanmariedufour.github.io/ResE/Dufour_2008_C_TS_ARIMA_Estimation.pdf}{\textcolor{blue}{situs berikut}} 
+
+\begin{center}
+---- Selesai ----
+\end{center}

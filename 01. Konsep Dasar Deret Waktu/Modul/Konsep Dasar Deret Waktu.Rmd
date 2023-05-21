@@ -1,0 +1,675 @@
+---
+title: " "
+author: "Leonardo Valentino Kosasih, S.Aktr."
+header-includes:
+    - \usepackage{titling}
+    - \usepackage{tcolorbox}
+    - \tcbuselibrary{listings, theorems}
+    - \usepackage{enumitem}
+    - \usepackage{setspace}\onehalfspacing
+    - \usepackage{fancyhdr}  
+    - \usepackage{hyphenat}
+    - \usepackage{eso-pic,graphicx}  
+    - \usepackage{transparent}
+    - \usepackage{draftwatermark}
+    - \usepackage{amsmath}
+    - \usepackage{hyperref}
+    - \pagestyle{fancy}  
+    - \usepackage{caption}
+    - \usepackage{theorem}
+    - \usepackage[bahasai]{babel}
+    - \fancyhead[LE,RO]{Modul Pratikum Analisis Deret Waktu AK-2281}  
+output: 
+  pdf_document: 
+    toc_depth: 2
+    fig_height: 3
+    fig_width: 4
+    extra_dependencies : awesomebox
+    number_sections: yes
+    fig_caption: yes
+    latex_engine: xelatex
+toc-title: "Daftar Isi"
+classoption: a4paper
+---
+\def\figurename{Gambar}
+\pagenumbering{gobble}  
+\newtcbtheorem[auto counter]{jp}{Jurnal Praktikum}{fonttitle=\bfseries\upshape, fontupper=\slshape, arc=0mm, colback=blue!5!white,colframe=blue!75!black}{jurnal}
+<!-- \begin{center} -->
+<!-- \Huge Modul Praktikum Analisis Deret Waktu \\  -->
+<!-- \Huge AK 2281 - Analisis Deret Waktu \\ -->
+<!-- \huge \textbf{Modul 1 - Konsep Dasar Deret Waktu} \\ -->
+<!-- \includegraphics{logo.png} -->
+<!-- \end{center}  -->
+<!-- \begin{center} -->
+<!-- \Large Pengajar : Dr. Sandy Vantika, S.Si., M.Si.  \\ -->
+<!-- \Large Koordinator Praktikum : Leonardo Valentino Kosasih, S.Aktr.    \\ -->
+<!-- \Large Kontak : +62 823 8599 5958  -->
+<!--  \end{center} --> 
+<!-- \SetWatermarkText{" "} -->  
+\hyphenchar\font=-1
+\Large Modul Praktikum Analisis Deret Waktu - AK2281   terdiri atas 5 buah modul sebagai berikut :  \begin{enumerate} 
+\item Modul 1 : Konsep Dasar Deret Waktu  
+\item Modul 2 : Model Data Tak Stasioner  
+\item Modul 3 : Model Musiman  
+\item Modul 4 : Model Heteroskedastik  
+\item Modul 5 : Pengayaan
+\end{enumerate}  
+\begin{tcolorbox}[colback=blue!5!white,colframe=blue!75!black,title = Tim Praktikum AK2281]
+\normalsize Koordinator Praktikum : Leonardo V. Kosasih, S.Aktr. \\
+Tim Penyusun Modul Praktikum :
+\begin{center}
+\begin{tabular}{ lcclc }
+Ang Ditra Alif Pradana & 10120046 & & Matthew Alfarazh & 10820021\\
+Feby Yolanda & 10819028 & & Pamella Cathryn & 10820033\\
+Ferdinan Gratius Budisatya & 10819041 & &Jeremy & 10820034\\
+Jevan Christopher Aryento & 10820010 & &Aloysius Vincent & 10820038\\
+Shelly Delfiani & 10820014 & &Kevin Christ Aditya & 10820039\\ 
+Binsar Gunadi Simbolon & 10820017 & &Shafina Aulia Kusuma Putri & 10820049 \\
+\end{tabular} \\
+\end{center}
+Desain sampul oleh : Matthew Alfarazh - 10820021
+\end{tcolorbox}
+\SetWatermarkText{ \includegraphics[angle=-45]{background.png}}
+\newpage 
+\pagenumbering{roman}
+\tableofcontents
+\newpage
+\large \textbf{Daftar Istilah dan Simbol} \normalsize  
+\begin{enumerate}
+\item $\varepsilon_t$(baca : epsilon) : galat ke-$t$;
+\item $\gamma_k$ (baca : gamma) : kovariansi ke-$k$;
+\item $\rho_k$ (baca : rho) : korelasi ke-$k$; 
+\item $\phi_{ij}$ (baca : phi) : korelasi parsial antara $i$ dan $j$; 
+\item $X \sim \text{N}(0,\sigma^2)$ : Peubah acak $X$ berdistribusi Normal dengan rataan 0 dan variansi $\sigma^2$;  
+\item ACF : \textit{Auto Correlation Function} atau Fungsi Auto korelasi;  
+\item PACF : \textit{Partial Auto Correlation Function} atau Fungsi Auto Korelasi Parsial;
+\item $\mathbb{N}$ : Himpunan bilangan asli $\{1,2,3,\dots\}$;
+\item $\mathbb{N}_0$ : Himpunan bilangan asli dan 0 $\{0,1,2,3,\dots\}$;
+\item $\sigma^2_\varepsilon$ (baca : sigma) : variansi dari $\varepsilon$;
+\item $\bar{x}$ : rataan dari $x$;
+\item $\theta$ (baca : theta);
+\item $\chi^2$ (baca : \textit{chi-squared})
+\item $\mathbf{A}$ : matriks $A$ ukuran $k\times k$; 
+\item $\in$ : elemen dari suatu himpunan.
+\item $\forall$ : untuk setiap
+\end{enumerate}
+\newpage
+\setcounter{page}{1}
+\pagenumbering{arabic}
+\begin{center}
+\Huge \textbf{Modul 1}
+\end{center}
+\Large \textbf{Tujuan}:  
+\normalsize  
+1.	Memahami pola data deret waktu,  
+2.	Mengidentifikasi deret waktu stasioner,  
+3.	Menghitung rataan, kovariansi dan korelasi pada deret waktu  
+4.	Mengenal model *random walk*.  
+5.  Mengidentifikasi perilaku ACF dan PACF.  
+
+
+# Konsep Dasar Deret Waktu
+##	Stasioneritas
+Asumsi yang harus dipenuhi pada pemodelan deret waktu adalah **stasioneritas**. Ide dasar dari kestasioneran adalah perilaku data tidak berubah sepanjang waktu. Ada 2 jenis stasioneritas yaitu **stasioneritas kuat** dan **stasioneritas lemah**. Misal proses $\{Y_t\}$ dengan rataan $\mu_t$. $\{Y_t\}$ dikatakan **stasioner kuat** jika  distribusi gabungan dari $Y_{t_1},Y_{t_2},\dots,Y_{t_n}$ sama dengan distribusi gabungan $Y_{t_1-k},Y_{t_2-k},\dots,Y_{t_n-k}$ untuk semua waktu $t_1,t_2,\dots,t_n$ dan lag waktu $k>0$. Contoh : proses white noise $\{\varepsilon_t\}$ dengan $\varepsilon_t \sim \text{N}(0, \sigma^2)$ saling bebas dan indentik.  
+Sedangkan proses stokastik $\{Y_t \}$ dikatakan  **stasioner lemah** jika :
+\begin{enumerate}
+\item Rataan konstan sepanjang waktu atau $E[Y_t] = \mu \quad \forall t \in \mathbb{N}_0$ dan 
+\item Kovariansi untuk semua waktu $t$ dan lag $k$ konstan atau $\text{Cov}(Y_t,Y_{t-k}) = \gamma_{t,t-k} = \gamma_{0,k} = \gamma_k$. 
+\end{enumerate}  
+Pada modul ini hanya dibahas tentang sifat kestasioneran lemah.   
+
+Beberapa contoh pola data dalam deret waktu, diantaranya pola tren, musiman, dan pola stasioner.
+\begin{enumerate}
+\item Pola tren: Terjadi jika terdapat kenaikan atau penurunan sekuler jangka panjang dalam data.
+\item Pola musiman: Terjadi jika suatu deret dipengaruhi oleh faktor musiman (misalnya kuartal tahun, bulanan, atau hari-hari pada minggu tertentu).
+\item Pola stasioner: Terjadi jika  data berfluktuasi di sekitar rata-rata yang konstan.
+\end{enumerate}
+```{r Contoh Plot yang Stasioner dan Tidak Stasioner, echo=TRUE, message=FALSE, warning=FALSE,fig.align='center'}
+# Package yang digunakan 
+library(zoo)
+library(forecast)
+library(tseries)
+
+# Seed agar simulasi tetap sama
+set.seed(1602)
+
+# Contoh data White Noise
+wn <- arima.sim(model =list(order = c(0,0,0)),n =300)
+plot(wn, main = 'Data 1, Stasioner')
+abline(h=mean(wn),col='red',lwd=2,lty = 2)
+```
+\begin{jp}{}{}
+\begin{enumerate}
+\item Berikan interpretasi anda terhadap gambar tersebut !  
+\item Apakah data tersebar pada rataan data ?  
+\item Apakah terdapat pola tren data ?
+\end{enumerate}
+\end{jp}
+```{r Contoh Plot yang Stasioner an Tidak Stasioner, echo=TRUE, message=FALSE, warning=FALSE,fig.align='center'}
+# Seed agar simulasi tetap sama
+set.seed(1602)
+
+# Data Harga Emas
+data(gold)
+sum <- ts(gold[1:300])
+sum <- na.fill(sum,median(sum,na.rm=TRUE))
+mean_sum <- mean(sum,na.rm=TRUE)
+plot(sum, main = 'Data Harga Emas, Tidak Stasioner')
+abline(h=mean_sum,col='red',lwd=2,lty = 2)
+```
+\begin{jp}{}{}
+\begin{enumerate}
+\item Berikan interpretasi anda terhadap grafik tersebut !  
+\item Apakah data tersebar pada rataan data ?  
+\item Selidiki variansi dari data ini. Apakah variansinya tetap sama pada semua lag waktu ?
+\end{enumerate}
+\end{jp}
+```{r Contoh Plot yang Stasioner daan Tidak Stasioner, echo=TRUE, message=FALSE, warning=FALSE,fig.align='center'}
+# Seed agar simulasi tetap sama
+set.seed(1602)
+
+# Data CO2
+data("co2")
+seasonal <- ts(co2[1:300])
+plot(seasonal, main = 'Data CO2, Tidak Stasioner')
+abline(h=mean(seasonal),col='red',lwd=2,lty = 2)
+```
+\begin{jp}{}{}
+\begin{enumerate}
+\item Berikan interpretasi anda terhadap grafik tersebut !  
+\item Apakah data tersebar pada rataan data ?  
+\item Apakah terdapat pola tren data ?
+\end{enumerate}
+\end{jp}
+```{r Contoh Plot yang Stasioner a Tidak Stasioner, echo=TRUE, message=FALSE, warning=FALSE,fig.align='center'}
+# Seed agar simulasi tetap sama
+set.seed(1602)
+
+# Membuat data Random Walk
+random_walk <- arima.sim(model = list(order=c(0,1,0)),n=300)
+plot(random_walk, main = 'Data Random Walk, Tidak Stasioner')
+abline(h=mean(random_walk),col='red',lwd=2,lty = 2)
+```
+\begin{jp}{}{}
+\begin{enumerate}
+\item Berikan interpretasi anda terhadap grafik tersebut !  
+\item Apakah data tersebar pada rataan data ?  
+\item Apakah terdapat pola tren data ?
+\end{enumerate}
+\end{jp}
+## Autokorelasi      
+Misalkan proses $\{Y_t\}$ stasioner maka korelasi antar peubah acak yang terpisah sejauh $k$ lag waktu adalah: 
+\begin{align*}
+\rho_k &= \text{Corr}(Y_t, Y_{t-k}) \\
+&= \frac{\text{Cov}(Y_t, Y_{t-k})}{\sqrt{\text{Var}(Y_t)\text{Var}(Y_{t-k})}} \\
+&= \frac{\gamma_k}{\gamma_0}, \quad k \in \mathbb{N}_0
+\end{align*}
+Terdapat statistik uji untuk menguji apakah nilai autokorelasi pada suatu lag ke-$k$ signifikan atau tidak. Statistik uji tersebut adalah statistik **uji $t_{ratio}$** dengan 
+\begin{align*}
+H_0 : \rho_k = 0 \\
+H_1 : \rho_k \neq 0 
+\end{align*}
+dengan $k \in \mathbb{N}$. Statistik hitung dari uji ini adalah:
+\begin{equation}
+t_{\text{ratio}} := \frac{\hat{\rho}_k}{\sqrt{\left( 1 + \sum_{i = 1}^{k - 1} \hat{\rho}_i\right)/n}}
+\end{equation}
+dengan $n$ adalah ukuran sampel.    
+$H_0$ akan ditolak jika $|t_{\text{hitung}}| > Z_{1-\frac{\alpha}{2}}$ dengan $Z_{1-\frac{\alpha}{2}}$ adalah persentil ke-($1-\frac{\alpha}{2}$) dari distribusi normal baku.  
+Sedangkan statistik uji untuk menguji apakah autokorelasi dari lag pertama hingga lag ke-$k$ signikan adalah Uji Ljung Box dengan:
+\begin{align*}
+H_0 &: \rho_1 = \rho_2 = \dots = \rho_k = 0 \\
+H_1 &: \rho_j \neq 0, \quad \quad j \in \{1, \dots, k \} 
+\end{align*}
+dengan $k \in \mathbb{N}$. Statistik hitung dari uji ini adalah:
+\begin{equation}
+Q(k) := n\left(n+2\right)\sum_{i=1}^k \frac{\hat{\rho}_i^2}{n-i}
+\end{equation}
+$H_0$ ditolak jika $Q(k) > \chi^2_{1-\alpha,k}$ dengan $\chi^2_{1-\alpha,k}$ adalah nilai persentil $1-\alpha$ dari distribusi $\chi^2$ dengan derajat kebebasan $k$.  
+
+## Random Walk  
+Misalkan $\varepsilon_1,\varepsilon_2, \dots$ barisan peubah acak yang berdistribusi Normal yang saling bebas dan identik dengan $E[\varepsilon_i]=0$ dan $\text{Var}(\varepsilon_i) =\sigma^2_\varepsilon$ untuk semua $i$. Maka proses *random walk* dapat dikonstruksi dengan persamaan berikut:
+\begin{equation}
+Y_t = \sum_{i=1}^t \varepsilon_i
+\end{equation}
+yang dapat ditulis secara rekursif seperti berikut: 
+\begin{equation}
+Y_t = Y_{t-1} - \varepsilon_t
+\end{equation}
+
+## Contoh soal :  
+\begin{jp}{}{}
+Klik link ini untuk mendownload data.\href{https://drive.google.com/uc?export=download&id=1zevgGmfz87MJYn8OuIX5FEBgypR-DWnG}{\textcolor{blue}{TEKAN UNTUK MENGUNDUH DATA}} kemudian buatlah algoritma untuk menghitung :  
+\begin{enumerate}
+\item Rataan dari data  
+\item Kovariansi dari data  
+\item Korelasi dari data
+\end{enumerate}
+\end{jp}  
+```{r Contoh Soal, message=FALSE, warning=FALSE,fig.align='center'}
+# Membaca data
+library(readxl)
+df <- read_excel("data.xlsx")  
+
+# Membuat plot data
+plot(df$Date, df$`Ice Cream Sales`, type = 'line', 
+   xlab= 'Tanggal', ylab= 'Penjualan Es Krim', 
+   col = 'black', 
+   main = 'Plot Data Penjualan Es Krim')
+abline(h=mean(df$`Ice Cream Sales`), 
+     col='red',
+     lwd=2,lty = 2)
+
+
+# Algoritma menghitung rataan (boleh menggunakan sum)  
+sum_x <- sum(df$`Ice Cream Sales`)
+len <- length(df$`Ice Cream Sales`)
+rata_x <- sum_x/len
+
+# Algoritma menghitung kovariansi  
+maxLag <- 24
+kov <- rep(0, maxLag)
+for (k in 1: maxLag) {
+x_star <- df$`Ice Cream Sales`[1:(len-k+1)]-
+  mean(df$`Ice Cream Sales`[1:(len-k+1)]) 
+y_star <- df$`Ice Cream Sales`[(1+k-1):len]-
+  mean(df$`Ice Cream Sales`[(1+k-1):len])
+kov[k]  <-  (x_star)%*%(y_star) /(len)
+}
+# Algoritma menghitung korelasi
+kor <- rep(0, maxLag)
+for (k in 1: maxLag) {
+x_star <- df$`Ice Cream Sales`[1:(len-k+1)]-
+  mean(df$`Ice Cream Sales`[1:(len-k+1)]) 
+y_star <- df$`Ice Cream Sales`[k:len]-
+  mean(df$`Ice Cream Sales`[k:len])
+penyebut <- sqrt((x_star%*%x_star)*(y_star%*%y_star))
+kor[k]  <-  x_star%*%y_star/penyebut
+}
+```
+Penjelasan lebih lanjut : 
+Persamaan kovariansi dapat ditulis sebagai berikut : 
+\begin{equation}
+\hat{\gamma}_{XY} = \frac{\sum_{i=1}^n (x_i - \bar{x})(y_i - \bar{y})}{n} = \frac{1}{n}(\vec{x}^* \cdot \vec{y}^*) 
+\end{equation}
+dengan $\vec{x}^* = (x_1 - \bar{x}, \dots, x_n - \bar{x})^T$ dan $\vec{y}^* = (y_1 - \bar{y}, \dots, y_n - \bar{y})^T$.  
+Sedangkan persamaan korelasi dapat ditulis sebagai berikut
+\begin{equation}
+\hat{\rho}_{XY} = \frac{\sum_{i=1}^n (x_i - \bar{x})(y_i - \bar{y})}{\sqrt{\sum_{i=1}^n (x_i - \bar{x})^2\sum_{i=1}^n(y_i - \bar{y})^2}} = \frac{1}{\sqrt{(\vec{x}^{*^T}\cdot \vec{x}^*)(\vec{y}^{*^T}\cdot \vec{y}^{*})}}(\vec{x}^* \cdot \vec{y}^*) 
+\end{equation}  
+Catatan : 
+Perhatikan bahwa terdapat kovariansi dan variansi sampel dan populasi. Untuk algoritma menghitung kovariansi sampel dan variansi sampel diserahkan kepada pembaca.    
+\newpage  
+
+# Model Deret Waktu Stasioner 
+Pada bab ini akan dipelajari perilaku umum dari ACF dan PACF untuk menentukan orde pada model deret waktu ARMA yang akan digunakan. Dua jenis perilaku umum yang ditunjukkan adalah **tails off**  dan **cuts off**.   
+```{r Contoh Plot tails dan cut, echo=FALSE, fig.align='center', fig.cap="Tails off (gambar atas) dan Cuts Off (gambar bawah)",fig.keep='all', message=FALSE, warning=FALSE}
+# Package yang digunakan 
+library(zoo)
+library(forecast)
+library(tseries)
+
+# Seed agar simulasi tetap sama
+set.seed(108)
+
+# Contoh data White Noise
+arr <- arima.sim(model = list(order=c(1,0,0), ar = c(0.9)), n = 500)
+par(mfrow = c(2,1),mar=c(1, 1, 1, 1))
+acf(arr, main = 'Tails Off')
+pacf(arr, main = 'Cuts off')
+```
+
+Berikut adalah persamaan autokorelasi sampel : 
+\begin{align*}
+\hat{\rho}_k &= \frac{\gamma_k}{\gamma_0} \\
+&= \frac{\sum_{t=1}^{n-k}(y_t - \bar{y})(y_{t+k} - \bar{y})}{\sum_{t=1}^n(y_t - \bar{y})^2} \quad k \in \mathbb{N}
+\end{align*}
+Sedangkan untuk persamaan autokorelasi parsial sampel adalah sebagai berikut  :  
+\begin{align*}
+\hat{\phi}_{ij} = \begin{cases}
+\hat{\rho}_1, \quad i = j = 1 \\
+\frac{\hat{\rho}_k - \sum_{j=1}^{k-1} \hat{\phi}_{k-1,j}\hat{\rho}_{k-j}}{1- \sum_{j=1}^{k-1} \hat{\phi}_{k-1,j}\hat{\rho}_{j}}, \quad k = 2,3,4,\dots \\
+\hat{\phi}_{k-1,j} - \hat{\phi}_{k,k}\hat{\phi}_{k-1,k-j}, \quad j \in \mathbb{N}
+\end{cases}
+\end{align*}
+Perilaku umum dari ACF dan PACF untuk model ARMA.
+\begin{center}
+\begin{tabular}{|c|c|c|c|}
+\hline
+&AR$(p)$&MA$(q)$& ARMA$(p,q)$ \\ \hline
+\textbf{ACF} &\textit{Tails off}&	\textit{Cuts off} setelah lag-$q$&	\textit{Tails off} setelah lag ke-$q$ \\ \hline 
+\textbf{PACF}& \textit{Cuts off} setelah lag $p$	&\textit{Tails off}	& \textit{Tails off} setelah lag ke-$p$\\ \hline
+\end{tabular}
+\end{center}
+
+Model deret waktu umum  yang sering digunakan adalah model regresi diri (*Autoregressive*), dinotasikan AR, model rataan bergerak (*Moving Average*), dinotasikan MA, dan model campuran regresi diri dan rataan bergerak (*Autoregressive Moving Average*), dinotasikan ARMA.  
+
+## Moving Average (MA)  
+Misalkan $Y_t=(Y_1,Y_2,…,Y_n )$, jika proses $\{Y_t\}$ mengikuti proses MA dengan orde $q$ maka dapat dinyatakan dengan persamaan berikut
+\begin{equation}
+Y_t=\varepsilon_t - \theta_1 \varepsilon_{t-1}-\theta_2 \varepsilon_{t-2}-\dots-\theta_q \varepsilon_{t-q}
+\end{equation}
+Misalkan $Y_t$ mengikuti proses MA(1) maka dapat dinyatakan dengan persamaan berikut
+\begin{equation}
+Y_t=\varepsilon_t - \theta_1 \varepsilon_{t-1}
+\end{equation}
+Karena $\varepsilon_t\sim \text{Normal}(0,\sigma^2_\varepsilon)$, maka $E[Y_t]=0$ dan $\text{Var}(Y_t)=(1+\theta^2)\sigma_\varepsilon^2$ (Bukti diserahkan kepada pembaca sebagai latihan).  
+sedangkan untuk kovariansi dari model MA dapat diperoleh sebagai berikut  
+\begin{align*}
+\text{Cov}(Y_t,Y_{t-1}) &=\text{Cov}(\varepsilon_t-\theta_1 \varepsilon_{t-1}, \varepsilon_{t-1}-\theta_1 \varepsilon_{t-2}) \\
+&=-\theta_1 \text{Cov}(\varepsilon_{t-1},\varepsilon_{t-1}) \quad (\text{Mengapa?}) \\
+&=-\theta_1 \sigma_\varepsilon^2
+\end{align*}  
+dan
+\begin{align*}
+\text{Cov}(Y_t,Y_{t-2})&=\text{Cov}(\varepsilon_t - \theta_1 \varepsilon_{t-1},\varepsilon_{t-2}-\theta_1\varepsilon_{t-3}) \\ 
+&= 0 \quad \text{(Mengapa?)}
+\end{align*}
+Sehingga fungsi autokovariansi untuk model MA(1) adalah
+\begin{align*}
+\gamma_k = \begin{cases}
+(1+\theta_1^2)\sigma^2_\varepsilon, \quad &k =0 \\
+-\theta_1 \sigma^2_\varepsilon, \quad &k = 1 \\ 
+0, \quad &k > 1
+\end{cases}
+\end{align*}
+dan fungsi autokorelasinya adalah 
+\begin{align*}
+\rho_k = \begin{cases}
+1, \quad &k =0 \\
+\frac{-\theta_1}{1+\theta^2_1}, \quad &k = 1 \\ 
+0, \quad &k >1
+\end{cases}
+\end{align*}
+Untuk membuat simulasi model MA(1) dapat menggunakan kode berikut :  
+```{r Model MA, echo=TRUE, fig.align='center', fig.keep='all'}
+n_sim <- 150 # Banyak data 
+theta <- -0.8 # Nilai dari theta_1
+simulasi_ar <- arima.sim(model = list(c(0,0,1), ma = theta), 
+                       n = n_sim)
+plot(simulasi_ar, main = 'Grafik Data MA(1)')
+acf(simulasi_ar, main = 'Grafik ACF Data MA(1)', 
+  lag.max = 36)
+pacf(simulasi_ar, main = 'Grafik PACF Data MA(1)', 
+  lag.max = 36)
+```
+\begin{jp}{}{}
+\begin{enumerate}
+\item Berikan interpretasi anda mengenai grafik tersebut !  
+\item Apakah data tersebar pada rataan data ?  
+\item Apakah terdapat pola tren data ?
+\end{enumerate}
+\end{jp}  
+```{r acf MA, echo=TRUE, fig.align='center', fig.keep='all'}
+acf(simulasi_ar, main = 'Grafik ACF Data MA(1)', 
+  lag.max = 36)
+```
+\begin{jp}{}{}
+\begin{enumerate}
+\item Berikan interpretasi anda mengenai grafik tersebut !  
+\item Apakah ACF berprilaku sesuai dengan model MA ? 
+\item Apakah data tersebut masih cocok dimodelkan dengan model MA(1) ? Berikan alasan anda !
+\end{enumerate}
+\end{jp}
+```{r pacf MA, echo=TRUE, fig.align='center', fig.keep='all'}
+pacf(simulasi_ar, main = 'Grafik PACF Data MA(1)', 
+  lag.max = 36)
+```
+\begin{jp}{}{}
+\begin{enumerate}
+\item Berikan interpretasi anda mengenai grafik tersebut !  
+\item Apakah PACF berprilaku sesuai dengan model MA ?
+\item Apakah data tersebut masih cocok dimodelkan dengan model MA(1) ? Berikan alasan anda !
+\item Ulangi langkah-langkah di atas dengan mengganti nilai variabel theta dan n\_sim!
+\end{enumerate}
+\end{jp}  
+Catatan: Nilai variabel theta dibuat negatif karena bahasa pemrograman R mendefinisikan model MA ($q$) sebagai:
+\begin{equation}
+Y_t=\varepsilon_t + \theta_1 \varepsilon_{t-1} + \theta_2 \varepsilon_{t-2} + \dots + \theta_q \varepsilon_{t-q}
+\end{equation}  
+
+## Autoregressive (AR)  
+Misalkan $Y_t=(Y_1,Y_2,…,Y_n )$, jika proses $\{Y_t\}$ mengikuti proses Autoregressive (AR) dengan orde $p$ maka dapat dinyatakan dengan persamaan berikut
+\begin{equation}
+Y_t=\phi_1 Y_{t-1}+\phi_2 Y_{t-2}+\dots+\phi_p Y_{t-p}+\varepsilon_t
+\end{equation}
+Interpretasi dari persamaan di atas adalah : nilai saat ini dari deret waktu $Y_t$ adalah kombinasi linier dari $p$ nilai dirinya di masa lalu ditambah dengan galat, $\varepsilon_t$
+Misalkan proses $\{Y_t\}$ terpusat, $Y_t$ mengikuti proses AR(1) maka dapat dinyatakan dengan persamaan berikut
+\begin{equation}
+Y_t=\phi_1 Y_{t-1}+\varepsilon_t
+\end{equation}
+Karena $\varepsilon_t\sim \text{Normal}(0,\sigma^2_\varepsilon)$, maka $E[Y_t]= 0$ dan $\text{Var}(Y_t)=\frac{\sigma_\varepsilon^2}{1-\phi_1^2}$ (Bukti diserahkan kepada pembaca sebagai latihan)
+sedangkan untuk kovariansinya dapat diperoleh 
+\begin{align*}
+\text{Cov}(Y_t,Y_{t-1}) &=\text{Cov}(\phi_1 Y_{t-1}+\varepsilon_t,Y_{t-1} ) \\
+&=\phi_1 \text{Cov}(Y_{t-1},Y_{t-1})+\text{Cov}(\varepsilon_{t},Y_{t-1} ) \\
+&=\phi_1 \gamma_0
+\end{align*}  
+dan
+\begin{align*}
+\text{Cov}(Y_t,Y_{t-2})&=\text{Cov}(\phi_1  Y_{t-1}+\varepsilon_t, Y_{t-2}) \\ 
+&= \text{Cov}(\phi_1  (\phi_1Y_{t-2}+\varepsilon_{t-1})+\varepsilon_t, Y_{t-2}) \\ 
+&= \text{Cov}(\phi_1^2 Y_{t-2},Y_{t-2}) + \text{Cov}(\phi_1\varepsilon_{t-1}),Y_{t-2}) + \text{Cov}(\varepsilon_t,Y_{t-2}) \\
+&=\phi_1^2\gamma_0
+\end{align*}
+sehingga fungsi autokovariansi untuk model AR(1) adalah
+\begin{align*}
+\gamma_k = \frac{\phi_1^k \sigma_\varepsilon^2}{1-\phi_1^2}, \quad k \geq 0 
+\end{align*}
+dan fungsi autokorelasinya adalah 
+\begin{align*}
+\rho_k = \frac{\gamma_k}{\gamma_0} = \phi_1^k \quad k \geq 0
+\end{align*}
+Untuk membuat simulasi model AR(1) dapat menggunakan kode berikut :  
+
+```{r Model AR, echo=TRUE, fig.align='center', fig.keep='all'}
+n_sim <- 150 # Banyak data 
+phi <- 0.2 # Nilai dari phi_1 
+simulasi_ar <- arima.sim(model = list(c(1,0,0), ar = phi), 
+                       n = n_sim)
+plot(simulasi_ar, main = 'Grafik Data AR(1)')
+```
+\begin{jp}{}{}
+\begin{enumerate}
+\item Berikan interpretasi anda mengenai grafik tersebut !  
+\item Apakah data tersebar pada rataan data ?  
+\item Apakah terdapat pola tren data ?
+\end{enumerate}
+\end{jp}  
+```{r acf AR, echo=TRUE, fig.align='center', fig.keep='all'}
+acf(simulasi_ar, main = 'Grafik ACF Data AR(1)', 
+  lag.max = 36)
+```
+\begin{jp}{}{}
+\begin{enumerate}
+\item Berikan interpretasi anda mengenai grafik tersebut !  
+\item Apakah ACF berprilaku sesuai dengan model AR (1)?
+\end{enumerate}
+\end{jp} 
+
+```{r pacf AR, echo=TRUE, fig.align='center', fig.keep='all'}
+pacf(simulasi_ar, main = 'Grafik PACF Data AR(1)', 
+  lag.max = 36)
+```
+Interpretasi Gambar : 
+
+\begin{jp}{}{}
+\begin{enumerate}
+\item Berikan interpretasi anda mengenai grafik tersebut !  
+\item Apakah PACF berprilaku sesuai dengan model AR (1)?
+\item Apakah data tersebut masih cocok dimodelkan dengan model AR(1) ?
+\item Ulangi langkah di atas dengan memvariasikan nilai variabel phi dan n\_sim !
+\end{enumerate}
+\end{jp}   
+
+## Autoregressive Moving Average (ARMA)
+Misalkan $Y_t=(Y_1,Y_2,…,Y_n )$, jika proses $Y_t$ mengikuti proses ARMA dengan orde $(p,q)$ maka dapat dinyatakan dengan persamaan berikut
+\begin{equation}
+Y_t=\phi_1 Y_{t-1}+\phi_2 Y_{t-2}+\dots+\phi_p Y_{t-p}+\varepsilon_{t}-\theta_1 \varepsilon_{t-1}-\theta_2 \varepsilon_{t-2}-\dots -\theta_q \varepsilon_{t-q}
+\end{equation}
+(Persamaan umum untuk $E[Y_t]$ dan $\text{Var}(Y_t)$ dari proses ARMA (1,1) diserahkan kepada pembaca)  
+Untuk membuat simulasi model ARMA(1,1) dapat menggunakan kode berikut :  
+```{r Model ARMA, echo=TRUE, fig.align='center', fig.keep='all'}
+n_sim <- 150 # Banyak data    
+theta <- -0.3 # Nilai dari theta_1
+phi <- 0.2 # Nilai dari phi_1 
+simulasi_ar <- arima.sim(model = list(c(1,0,1), ar = phi, ma = theta), 
+                       n = n_sim)
+plot(simulasi_ar, main = 'Grafik Data ARMA(1,1)')
+```
+\begin{jp}{}{}
+\begin{enumerate}
+\item Berikan interpretasi anda mengenai grafik tersebut !  
+\item Apakah data tersebar pada rataan data ?  
+\item Apakah terdapat pola tren data ?
+\end{enumerate}
+\end{jp}  
+```{r acf ARMA, echo=TRUE, fig.align='center', fig.keep='all'}
+acf(simulasi_ar, main = 'Grafik ACF Data ARMA(1,1)', 
+  lag.max = 36)
+```
+\begin{jp}{}{}
+\begin{enumerate}
+\item Berikan interpretasi anda mengenai grafik tersebut !  
+\item Apakah ACF berprilaku sesuai dengan model ARMA (1,1)?
+\item Apakah data tersebut masih cocok dimodelkan dengan model ARMA(1,1) ?
+\end{enumerate}
+\end{jp} 
+```{r pacf ARMA, echo=TRUE, fig.align='center', fig.keep='all'}
+pacf(simulasi_ar, main = 'Grafik PACF Data ARMA(1,1)', 
+  lag.max = 36)
+```  
+\begin{jp}{}{}
+\begin{enumerate}
+\item Berikan interpretasi anda mengenai grafik tersebut !  
+\item Apakah PACF berprilaku sesuai dengan model ARMA (1,1)?
+\item Apakah data tersebut masih cocok dimodelkan dengan model ARMA(1,1) ?
+\end{enumerate}
+\end{jp} 
+
+## Simulasi Data Manual  
+Misal proses $\{Y_t\}$ mengikuti model ARMA (1,1) maka persamaannya adalah : 
+\begin{equation}
+Y_t=\phi_1 Y_{t-1}+\varepsilon_{t}-\theta_1 \varepsilon_{t-1}
+\end{equation}  
+```{r Membuat Data, echo=TRUE, fig.align='center', fig.cap='Grafik Data Manual'}
+n_sim <- 100 # Banyak Data  
+phi <- 0.8 # Nilai dari phi_1 
+theta <- -0.5 # Nilai dari theta_1
+sig <- 16 # Besar standar deviasi error  
+Y <- c(rep(0, #Nilai awal
+         n_sim)) # Membuat array / vektor data  
+e <- rnorm(n = n_sim,
+         mean = 0, 
+         sd = sig) # Membuat galat
+for(i in 2:n_sim){
+if(i)
+Y[i] <- phi*Y[i-1] + e[i] - theta*e[i-1]
+}
+plot(Y, type = 'l',
+   main = 'Data ARMA(1,1) Manual')
+```
+\begin{jp}{}{}
+\begin{enumerate}
+\item Berikan interpretasi anda mengenai grafik tersebut !  
+\item Apakah data tersebar pada rataan data ?  
+\item Apakah terdapat pola tren data ?
+\end{enumerate}
+\end{jp}  
+Berikutnya akan dicoba menghitung ACF secara manual  
+```{r ACF Manual, echo=TRUE}
+maxLag <- 25  
+acf_manual <- rep(1,maxLag)
+for(i in 1:maxLag){
+pembilang <- (Y[1:(n_sim-i+1)]-mean(Y))%*%(Y[i:n_sim]-mean(Y))
+penyebut <- sum((Y-mean(Y))^2)
+acf_manual[i]<-sum(pembilang/penyebut)
+}
+acf_r <- as.vector(acf(Y,lag.max = 24,plot = F)$acf)
+galat <- acf_manual - acf_r
+sum(galat) # Total Galat 
+```
+Terakhir akan dicoba menghitung PACF secara manual. Perhatikan bahwa PACF dapat dituliskan dengan persamaan Yule Walker seperti berikut :
+\begin{equation}
+\rho_j = \phi_{k1} \rho_{j-1} + \phi_{k2} \rho_{j-2}+ \phi_{k3} \rho_{j-3} +\dots +\phi_{kk} \rho_{j-k}, \quad k \in \mathbb{N}
+\end{equation}
+Secara umum maka diperoleh 
+\begin{align*}
+\phi_{k1} + \rho_1 \phi_{k2} + \rho_2 \phi_{k3} + \dots + \rho_{k-1} \phi_{kk}&= \rho_1 \\
+\rho_1\phi_{k1} +  \phi_{k2} + \rho_1 \phi_{k3} + \dots + \rho_{k-2} \phi_{kk}&= \rho_2 \\
+\rho_2\phi_{k1} +  \rho_1 \phi_{k2} + \phi_{k3} + \dots + \rho_{k-3} \phi_{kk}&= \rho_3 \\
+\quad \quad \vdots \\
+\rho_{k-1}\phi_{k1} +  \rho_{k-2}\phi_{k2} + \rho_{k-3} \phi_{k3} + \dots +  \phi_{kk}&= \rho_k \\
+\end{align*}
+Sehingga persamaan ini dapat ditulis menjadi persamaan matriks sebagai berikut :
+\begin{equation}
+\mathbf{A}\mathbf{x} = \mathbf{y}
+\end{equation}
+dengan masing - masing,
+\begin{equation} 
+\mathbf{A} = 
+\begin{bmatrix}
+1 &\rho_1 & \rho_2 & \dots & \rho_{k-1} \\
+\rho_1 & 1 & \rho_1 & \dots & \rho_{k-2} \\
+\rho_2 & \rho_1 & 1 & \dots & \rho_{k-3} \\ 
+\vdots & \vdots & \ddots & \vdots & \vdots \\ 
+\rho_{k-1}& \rho_{k-2} & \rho_{k-3} & \dots &1 
+\end{bmatrix} 
+\end{equation}
+dan 
+\begin{equation}
+\mathbf{x}=
+\begin{bmatrix}
+\phi_{k1}\\
+\phi_{k2}\\
+\phi_{k3}\\ 
+\vdots \\
+\phi_{kk} 
+\end{bmatrix} \text{ dan } 
+\mathbf{y} = 
+\begin{bmatrix}
+\rho_1 \\
+\rho_2 \\ 
+\rho_3 \\
+\vdots \\
+\rho_k
+\end{bmatrix} 
+\end{equation}
+Sehingga untuk menghitung nilai dari $\mathbf{x}$ dapat dilakukan dengan :
+\begin{equation}
+\mathbf{x} = \mathbf{A}^{-1}\mathbf{y}
+\end{equation}
+Ingat bahwa nilai korelasi parsial yang ingin dihitung adalah $\phi_{kk}$ sehingga perhitungannya dapat dilakukan iterasi sebagai berikut :   
+```{r PACF Manual, echo=TRUE}
+library(matrixcalc) # Untuk mencari invers matriks
+
+maxLag <- 24 # Ukuran vektor dan matriks
+pacf_manual <- rep(0,maxLag)
+for (k in 1:maxLag){
+if (k ==1){
+  pacf_manual[k] <- acf_r[2] # Hati - hati 
+}                   #jika mau mengubah maxLag
+else{
+rho <- acf_r[1:(k+1)] # Vektor y
+phi <- matrix(1, nrow=k,ncol=k) # Matriks A
+for (i in 1:(k)){
+  for (j in 1:(k)){
+    phi[i,j] <- rho[abs(i-j)+1] # Membuat matriks simetri
+  }
+}# vektor x
+pacf_manual[k] <- as.vector(matrix.inverse(phi)%*%rho[2:(k+1)])[k] 
+}
+}
+pacf_r <- as.vector(acf(Y,
+                      lag.max = maxLag, 
+                      type = 'partial',
+                      plot = F)$acf)
+galat <- pacf_manual - pacf_r
+sum(galat) # Total Galat 
+```
+# Daftar Pustaka  
+Cryer, J., & Chan, K. (2011). Time series analysis. New York: Springer.  
+  Wei, W. W. S. (1990). Time series analysis: Univariate and multivariate methods. Redwood City, Calif: Addison-Wesley Pub.  
+  Tsay, R. S. (2002). Analysis of Financial Time Series. New York: Wiley
+\begin{center}
+---- Selesai ----
+\end{center}

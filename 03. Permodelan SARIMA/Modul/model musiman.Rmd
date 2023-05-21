@@ -1,0 +1,430 @@
+---
+title: " "
+author: "Leonardo Valentino Kosasih, S.Aktr."
+header-includes:
+    - \usepackage{titling}
+    - \usepackage{tcolorbox}
+    - \tcbuselibrary{listings, theorems}
+    - \usepackage{enumitem}
+    - \usepackage{setspace}\onehalfspacing
+    - \usepackage{fancyhdr}  
+    - \usepackage{hyphenat}
+    - \usepackage{eso-pic,graphicx}  
+    - \usepackage{transparent}
+    - \usepackage{draftwatermark}
+    - \usepackage{amsmath}
+    - \usepackage{hyperref}
+    - \pagestyle{fancy}  
+    - \usepackage{caption}
+    - \usepackage{theorem}
+    - \usepackage[bahasai]{babel}
+    - \fancyhead[LE,RO]{Modul Pratikum Analisis Deret Waktu AK-2281}  
+output: 
+  pdf_document: 
+    toc_depth: 2
+    fig_height: 3
+    fig_width: 4
+    extra_dependencies : awesomebox
+    number_sections: yes
+    fig_caption: yes
+    latex_engine: xelatex
+toc-title: "Daftar Isi"
+classoption: a4paper
+---
+\renewcommand{\theequation}{\thesection.\arabic{equation}}
+\counterwithin{equation}{section}
+\def\figurename{Gambar}
+\pagenumbering{gobble}  
+\newtcbtheorem[auto counter]{jp}{Jurnal Praktikum}{fonttitle=\bfseries\upshape, fontupper=\slshape, arc=0mm, colback=blue!5!white,colframe=blue!75!black}{jurnal}
+<!-- \begin{center} -->
+<!-- \Huge Modul Praktikum Analisis Deret Waktu \\  -->
+<!-- \Huge AK 2281 - Analisis Deret Waktu \\ -->
+<!-- \huge \textbf{Modul 1 - Konsep Dasar Deret Waktu} \\ -->
+<!-- \includegraphics{logo.png} -->
+<!-- \end{center}  -->
+<!-- \begin{center} -->
+<!-- \Large Pengajar : Dr. Sandy Vantika, S.Si., M.Si.  \\ -->
+<!-- \Large Koordinator Praktikum : Leonardo Valentino Kosasih, S.Aktr.    \\ -->
+<!-- \Large Kontak : +62 823 8599 5958  -->
+<!--  \end{center} --> 
+<!-- \SetWatermarkText{" "} -->  
+\hyphenchar\font=-1
+\Large Modul Praktikum Analisis Deret Waktu - AK2281   terdiri atas 5 buah modul sebagai berikut :  \begin{enumerate} 
+\item Modul 1 : Konsep Dasar Deret Waktu  
+\item Modul 2 : Model Data Tak Stasioner  
+\item Modul 3 : Model Musiman  
+\item Modul 4 : Model Heteroskedastik  
+\item Modul 5 : Pengayaan
+\end{enumerate}  
+\begin{tcolorbox}[colback=blue!5!white,colframe=blue!75!black,title = Tim Praktikum AK2281]
+\normalsize Koordinator Praktikum : Leonardo V. Kosasih, S.Aktr. \\
+Tim Penyusun Modul Praktikum :
+\begin{center}
+\begin{tabular}{ lcclc }
+Ang Ditra Alif Pradana & 10120046 & & Matthew Alfarazh & 10820021\\
+Feby Yolanda & 10819028 & & Pamella Cathryn & 10820033\\
+Ferdinan Gratius Budisatya & 10819041 & &Jeremy & 10820034\\
+Jevan Christopher Aryento & 10820010 & &Aloysius Vincent & 10820038\\
+Shelly Delfiani & 10820014 & &Kevin Christ Aditya & 10820039\\ 
+Binsar Gunadi Simbolon & 10820017 & &Shafina Aulia Kusuma Putri & 10820049 \\
+\end{tabular} \\
+\end{center}
+Desain sampul oleh : Matthew Alfarazh - 10820021
+\end{tcolorbox}
+\SetWatermarkText{ \includegraphics[angle=-45]{background.png}}
+\newpage 
+\pagenumbering{roman}
+\tableofcontents
+\newpage
+\setcounter{page}{1}
+\pagenumbering{arabic}
+\begin{center}
+\Huge \textbf{Modul 3}
+\end{center}
+\Large \textbf{Tujuan}:  \normalsize
+\begin{enumerate}
+\item Mengetahui perbedaan ARIMA dan \textit{Seasonal} ARIMA
+\item Menganalisis data real deret waktu dengan efek musiman dan memodelkannya,  
+\end{enumerate}
+\normalsize Pada modul kali ini ada beberapa *library* yang akan digunakan yakni sebagai berikut :  
+```{r Library, echo=TRUE, message=FALSE, warning=FALSE}
+# Untuk membaca data dengan format csv
+library(readr) 
+
+# Untuk membersihkan data 
+library(tidyr)
+
+# Untuk mengubah data menjadi Time Series, 
+# membuat plot ACF, plot PACF, Model ARIMA dan ADF Test
+library(tseries)
+
+# Untuk melihat signifikansi koefisien dari parameter
+library(lmtest) 
+
+# Untuk memprediksi data dari model  
+library(forecast)
+```
+
+Sedangkan data yang akan diolah adalah data \textit{Sharing Bike in Washington D.C.} yang diperoleh dari Kaggle dengan modifikasi.  
+\begin{center}
+\href{https://drive.google.com/uc?export=download&id=1itAebMBDgp87QIaCO8KFk3Y0rrdr16JR}{\textcolor{blue}{TEKAN UNTUK MENGUNDUH DATA}}
+\end{center}   
+\newpage
+    
+\Huge \textbf{Alur Pemodelan}  
+\normalsize Data deret waktu yang baik adalah data yang memiliki ukuran setidaknya 50 observasi. Jika kurang dari 50 observasi maka hasil pengolahan data deret waktu dapat menjadi sangat bias. Selain jumlah data, perlu diperhatikan kualitas dari data juga perlu diperhatikan. Secara umum, alur pemodelan deret waktu dapat dibagi menjadi berikut : 
+\begin{enumerate}
+\item Analisis Data atau EDA (\textit{Exploratory Data Analysis})\\
+Pada bagian ini akan dihitung statistik deskriptif dari data (nilai minimum, maksimum, rataan, median dan lainnya) dan dapat dilihat pola dari data. Kelengkapan data juga harus diperiksa. Umumnya, data deret waktu dilaporkan secara runtut (per bulan, per hari dan seterusnya).
+\item Mempersiapkan data atau \textit{Data Processing}\\
+Pada bagian ini dapat dilakukan \textit{imputation} jika terdapat data yang kosong dan dapat dilakukan transformasi ataupun diferensiasi data. Dalam mempersiapkan data sebelum membangun model, ada baiknya pula untuk membagi data menjadi 2 bagian dengan rasio 80:20 dengan 80\% data pertama akan disebut dengan data \textit{training} dan 20\% berikutnya akan disebut dengan data \textit{validation/test}. Tujuan dari membagi data ini adalah untuk membagi data yang akan digunakan untuk \textbf{membangun} model dan untuk \textbf{menguji} model untuk menghindari \textit{overfitting} dan juga untuk melihat performa model dalam melakukan prakiraan/\textit{forecasting} pada data yang digunakan untuk \textbf{membangun} model dan dari data yang "belum diketahui". Hasil pengujian model dengan menggunakan data \textit{training} disebut dengan \textit{in-sample error} sedangkan jika menggunakan data \textit{validation/test} disebut dengan \textit{out-of-sample error} 
+\item Identifikasi Model  \\
+Khusus untuk data deret waktu, akan ditinjau perilaku dari autokorelasi dan autokorelasi parsial dari data. Pada bagian ini akan dipilih beberapa kandidat model yang dirasa cocok untuk memodelkan data.
+\item Estimasi Parameter  \\
+Pada bagian ini akan dianalisis parameter yang telah ditaksir. Idealnya, parameter yang dipilih signifikan terhadap model dan juga memiliki jumlah parameter yang sedikit pula.  
+Misalkan $\hat{\beta}$ adalah taksiran dari suatu parameter dan $\beta$ adalah nilai parameter yang sebenarnya. Taksiran yang baik adalah taksiran yang memenuhi sifat-sifat berikut: 
+\begin{enumerate}
+\item Tak bias: ekspektasi dari taksiran parameter adalah nilai parameter sebenarnya yang secara matematis ditulis sebagai berikut \begin{equation}E\left[ \hat \beta \right] = \beta\end{equation}
+\item Konsisten: untuk data yang semakin banyak, maka peluang dari suatu taksiran parameter dengan nilai dari parameter sebenarnya akan mendekati 0 (sangat mirip). Secara matematis ditulis sebagai berikut \begin{equation} \lim_{n\to \infty} \Pr\left(|\hat{\beta}_n - \beta| \leq \delta \right) = 1 \quad \forall \delta >0 \end{equation} 
+\item Efisien: ukuran efisiensi yang umum digunakan adalah \textit{Mean Squared Error} yang secara matematis ditulis sebagai berikut: \begin{equation}E\left[\left(\hat{\beta} - \beta\right)^2\right]\end{equation}
+\end{enumerate}
+\item Uji Diagnostik \\
+Pada bagian ini akan diperiksa perilaku galat yang dihasilkan oleh model. Ada 3 asumsi yang harus dipenuhi oleh galat yaitu:
+\begin{enumerate}
+\item Berdistribusi Normal dengan rataan 0 dan variansi $\sigma^2_\varepsilon$ atau $\varepsilon_t \sim N(0,\sigma^2_\varepsilon) \quad \forall t$
+\item Saling bebas
+\item Homoskedastis: variansi konstan
+\end{enumerate}
+\item Penaksiran atau \textit{Forecasting}\\
+Pada bagian ini akan dilakukan penaksiran titik dan taksiran selang dengan tingkat signifikansi tertentu.
+\end{enumerate}  
+Sedangkan pemodelan iterasi Box-Jenkins adalah
+\begin{enumerate}
+\item Identifikasi Model 
+\item Pembuatan Model (\textit{Model Fitting})
+\item Uji Diagnostik Model
+\end{enumerate}  
+Dikatakan itereasi karena jika galat dari model tidak memenuhi sifat-sifat galat yang telah disampaikan di atas, maka perlu dilakukan kembali identifikasi model.  
+Catatan: penulisan angka ribuan akan digunakan tanda koma (,) sedangkan untuk menuliskan
+angka desimal akan digunakan tanda titik(.).  
+\newpage  
+  
+# EDA  
+Pada bagian ini akan dilihat grafik data, dan juga stastik deskriptif dari data  
+```{r Selayang Pandang Data, echo=TRUE, message=FALSE, warning=FALSE, fig.align='center'}
+# Memanggil Data  
+data<- read_csv("day1.csv", 
+    col_types = cols(dteday = col_date(format = "%m/%d/%Y")))
+
+# Membuat grafik data
+plot(data$dteday,data$casual, type = 'l', 
+     ylab = "Banyak Pengendara", xlab = "Tanggal", main = "Grafik Banyak Pengendara")
+# Membuat garis rataan
+abline(h=mean(data$casual),lwd=2,
+       lty = 2, col ='red') 
+
+# Statistik Deskriptif
+summary(data$casual) 
+```  
+Dapat dilihat secara umum terdapat trend naik dari bulan Januari hingga Juli. Dapat pula dilihat seperti ada pola musiman pada data. Untuk membantu melihat pola musiman pada data, dapat dilihat melalui plot ACF data. 
+```{r Selayang Pandang Data ACF, echo=TRUE, message=FALSE, warning=FALSE, fig.align='center'}
+# Plot ACF
+acf(data$casual, main ='Grafik ACF Data',lag.max = 48)
+```  
+Pada grafik ACF dapat dilihat bahwa pada tiap lag kelipatan 7 cenderung lebih tinggi dari yang lain. Sehingga akan diasumsikan bahwa data memiliki pola seasonal dengan $s = 7$. Apabila terdapat data yang sulit diindentifikasi periode musimnya, dapat dilakukan \textit{spectral analysis} yang terdapat pada lampiran \ref{spectral}.  
+    
+## Lebih Jauh Mengenai Musiman  
+```{r Selayang Pandang Dataaa, echo=TRUE, message=FALSE, warning=FALSE, fig.align='center', }
+# Membuat data menjadi time series    
+ts_data <- ts(data$casual, frequency = 7)
+
+#Plot data secara seasonal
+ggseasonplot(ts_data, season.labels = 'Weeks', main = 'Grafik Data Per Minggu')
+
+#Plot per subseries, misalnya perminggu
+ggsubseriesplot(ts_data, main ='Grafik Data Per Minggu')
+
+# Plot data yang telah didekomposisi
+plot(decompose(ts_data))
+```   
+Dari fungsi ```ggsubseriesplot``` dapat dilihat lebih jelas bahwa memang terdapat pola mingguan pada data. Sedangkan dari fungsi ```decompose```dapat dilihat lebih jelas unsur-unsur dari masing-masing **trend** dan musiman.  
+  
+# Mempersiapkan Data  
+Untuk membagi data menjadi data **train** dan **validation** dilakukan dengan cara yang sedikit berbeda dengan yang sebelumnya. Data akan dibagi berdasarkan banyak minggunya. Pada data terdapat 212 observasi yang berarti terdapat sekitar 30 minggu. Sehingga jumlah observasi yang akan menjadi data **train** sebanyak $0.8 \times 30 \text{ minggu} = 24 \text{ minggu} = 168 \text{ observasi}$ dan sisa datanya akan menjadi data **validation**
+```{r Validation Test, echo=TRUE}
+# Membuat data train dan validation dan mengubahnya
+# menjadi data time series
+
+# dibutuhkan untuk menghasilkan data prediksi
+casual <- ts(data$casual,frequency = 7)  
+
+# data yang akan digunakan untuk membuat model
+casual_train <- ts(data$casual[1:168],frequency = 7) 
+
+# data yang akan digunakan untuk memvalidasi model
+casual_validation <-ts(data$casual[169:212],frequency = 7) 
+```
+\begin{jp}{}{}
+Buatlah suatu \textit{base} model yang sesuai!
+\end{jp}
+  
+# Identifikasi Model  
+Dalam mengindentifikasi model, langkah pertama yang perlu dilakukan adalah memeriksa kestasioneran data. Salah satu caranya adalah dengan melakukan uji **Augmented Dickey Fuller Test**, yang berikutnya akan disebut dengan uji ADF. Uji ADF ini akan menguji apakah **unit root** pada model deret waktu bernilai kecil dari 1 atau tidak. **Unit root** inilah yang menjadi salah satu indikator apakah suatu data deret waktu stasioner atau tidak. Jika $H_0$ ditolak maka dapat ditarik kesimpulan bahwa data stasioner. Selain uji ADF, dapat pula dilihat pola dari grafik ACF data. Pada modul ini akan digunakan $\alpha = 0.05$.  
+  
+Akan dilakukan Uji ADF pada data  
+```{r uji uji, fig.align='center'}
+adf.test(casual_train) 
+acf(casual_train, main = 'Grafik ACF Data',lag.max = 49)
+```
+Dapat dilihat bahwa nilai *p-value* $< \alpha$ sehingga dapat disimpulkan bahwa data sudah stasioner dalam rataan. Sehingga akan dilakukan diferensiasi musiman.  
+
+```{r Data Diferensiasi 1 Kali, echo=TRUE, fig.align='center',message=FALSE, warning=FALSE}
+casual_train_diff <- diff(casual_train, lag = 7)
+plot(casual_train_diff,
+     lwd = 2, 
+     main = 'Plot Data Diferensiasi Seasonal')
+abline(h=mean(casual_train_diff),
+       lwd=2,lty = 2, 
+       col ='red')
+```
+Dapat dilihat bahwa data yang sudah didiferensiasi musiman jauh lebih stasioner dibandingkan dengan yang belum didiferensiasi. Untuk lebih pasti akan dilakukan uji ADF dan akan dilihat pula grafik ACFnya
+```{r acf dfif, fig.align='center'}
+adf.test(casual_train_diff, k = 1)
+acf(casual_train_diff, 
+    main ='Grafik ACF Data Diferensiasi 1 Kali 
+    Diferensiasi ',
+    lag.max = 42)
+```
+Dapat dilihat bahwa p-value $< \alpha$ sehingga dapat disimpulkan bahwa model sudah stasioner.  
+\begin{jp}{}{}
+Diferensiasi mana yang perlu dilakukan terlebih dahulu ? Apakah diferensiasi musiman atau diferensiasi rataan ?
+\end{jp}
+  
+Setelah data menjadi stasioner, berikutnya akan diidentifikasi model yang cocok pada data dengan melihat grafik ACF dan PACF data  
+```{r acf diffff, fig.align='center'}
+acf(casual_train_diff, 
+main ='Grafik ACF Data Diferensiasi 1 Kali 
+    Diferensiasi ', lag.max = 42)
+```
+Dapat dilihat bahwa grafik ACF cut off pada lag pertama musiman. Namun dapat dilihat juga bahwa plot ACF memiliki \textit{tails off}. Hal ini akan disimpulkan kemudian.  
+```{r pacf diffff, fig.align='center'}
+pacf(casual_train_diff, 
+main ='Grafik PACF Data Diferensiasi 1 Kali 
+    Diferensiasi ', lag.max = 42)
+```
+Pada plot PACF dapat dilihat bahwa grafik *cuts off* musiman hingga lag ke-4.  
+  
+Dari grafik-grafik tersebut dapat disimpulkan model-model yang akan dicoba adalah sebagai berikut :  
+\begin{enumerate}
+\item $SARIMA (0,0,0) \times (4,1,1)_{7}$
+\item $SARIMA (1,0,1) \times (4,1,1)_{7}$
+\end{enumerate}  
+
+Untuk interpretasi model dapat diperoleh model yang berbeda dengan yang di atas asalkan alasan yang diberikan masih bisa diterima. Model yang baik adalah model yang memiliki sifat parsimoni, yakni model yang dapat menjelaskan data dengan baik dengan parameter yang sedikit.  Sehingga untuk itu perlu dilakukan analisis lebih lanjut mengenai ketiga kandidat model tersebut.   
+  
+# Penaksiran Parameter  
+Berikut adalah kode untuk melakukan penaksiran parameter model  
+```{r Model, echo=TRUE, message=FALSE, warning=FALSE}
+# Metode default dari arima adalah kombinasi antara maximum likelihood 
+# dan conditional sum of square
+
+mod_1 <- arima(casual_train, order = c(0,0,0), 
+               seasonal = list(order = c(4,1,1), period = 7), 
+               method = 'ML')
+mod_1
+
+mod_2 <- arima(casual_train, order = c(1,0,1), 
+               seasonal = list(order = c(4,1,1), 
+                               period = 7), 
+               method = 'ML')
+mod_2
+
+mod_auto <- auto.arima(casual_train, max.p=4,max.q=4, max.P = 4, max.Q = 4,
+                      seasonal =TRUE, stationary = FALSE, allowdrift = FALSE)
+mod_auto
+```
+(Catatan : Pada bagian ini metode CSS tidak dapat digunakan, sehingga digunakan metode ML)  
+Dapat dilihat bahwa model dengan AIC terkecil dimiliki oleh model $SARIMA (4,0,3) \times (0,1,3)_{7}$. Namun, dapat dilihat pula pada model $SARIMA (0,0,0) \times (4,1,1)_{7}$ memiliki AIC yang tidak jauh berbeda dengan AIC pada model $SARIMA (1,0,1) \times (4,1,1)_{7}$. sehingga akan dipilih model $SARIMA (0,0,0) \times (4,1,1)_{7}$ untuk dianalisis lebih lanjut.  
+  
+Berikutnya akan dilakukan uji signifikansi dari model  
+  
+# Signifikansi dari Koefisien Parameter dan Pembuatan Model
+Akan diperiksa siginifikansi parameter model  
+```{r Pemeriksaan Koefisien, echo=TRUE, message=FALSE, warning=FALSE}
+coeftest(mod_1) 
+```
+Dapat dilihat bahwa semua parameter signifikan. Sehingga dapat disimpulkan bahwa model yang dipilih dapat digunakan untuk memodelkan data.   
+Penulisan persamaan dari model adalah sebagai berikut :  
+\begin{align*}
+\Phi_4(B) (1-B^7) Y_t = \Theta_1(B) \varepsilon_t \\
+\vdots \\
+\text{(Diserahkan kepada pembaca sebagai latihan)}
+\end{align*}   
+\begin{equation}
+\label{model arima}
+Y_t= \dots \text{(Diserahkan kepada pembaca sebagai latihan)}  
+\end{equation}  
+
+Berikutnya akan dilihat performa model seperti berikut 
+```{r Accuracy Trainnning}
+accuracy(mod_1)
+```
+Dapat dilihat bahwa MAPE dari model sebesar $\approx 53\%$, namun ME dari model sebesar 49 yang relatif kecil dibandingkan dengan rataan data. Sehingga dapat diambil kesimpulan bahwa model ini cocok digunakan untuk memodelkan data yang ada.    
+\begin{jp}{}{}
+Bandingkanlah performa model SARIMA yang dipilih dengan \textit{base} model yang sebelumnya telah dibuat!
+\end{jp}
+# Uji Diagnostik   
+Model deret waktu dikatakan cocok jika galat memenuhi sifat-sifat berikut:
+\begin{enumerate}
+\item Berdistribusi Normal dengan rataan 0 dan variansi $\sigma^2_\varepsilon$ atau $\varepsilon_t \sim N(0,\sigma^2_\varepsilon) \quad \forall t$
+\item Saling bebas 
+\item Homoskedastis: variansi konstan
+\end{enumerate} 
+Untuk melakukan uji diagnostik dapat dilakukan dengan bantuan grafik dan juga uji statistik seperti Ljung Box seperti berikut : 
+```{r Model Diagnostic, echo=TRUE, fig.align='center', message=FALSE, warning=FALSE}
+checkresiduals(mod_1)
+```
+Perhatikan bahwa p-value $<\alpha$ sehingga dapat disimpulkan bahwa data tidak saling bebas. Hal ini diperkuat dari plot ACF yang signifikan pada lag ke 1 dan 3. Dapat dilihat juga bahwa distribusi dari residual hampir menyerupai distribusi normal dan grafik dari galat dapat diasumsikan bahwa galat dari residual 0 dan variansinya konstan.   
+
+\begin{jp}{}{}
+Lakukanlah uji Kolmogorov-Smirnov, Anderson-Darling, Cramer von Mises, Jarque-Bera, dan Shapiro-Wilk pada data residual dengan menggunakan fungsi \texttt{residuals(mod\_1)}. Apakah dari ke-5 uji tersebut ada yang menolak bahwa data residual berdistribusi normal?
+\end{jp}
+  
+# **Forecasting**
+Sebelum dilakukan **forecasting** akan dilihat terlebih dahulu performa model untuk memodelkan data **validation** terlebih dahulu.  
+```{r validation}
+validation <- forecast(casual_train, 
+                       model=mod_1,
+                       h=length(casual_validation))
+actual <- as.vector(casual_validation)
+ape_validation <- abs((as.vector(validation$mean) -actual)/actual)
+mape_validation <- mean(ape_validation)
+mape_validation
+me_validation <- mean((validation$mean) -actual)
+me_validation
+```
+Dapat dilihat bahwa MAPE dari model sebesar 29.4% yang lebih kecil daripada MAPE yang diperoleh sebelumnya sedangkan ME-nya sedikit lebih besar dibandingkan dengan yang sebelumnya namun tetap lebih kecil dibandingkan statistik deskriptif data. Sehingga model yang dipilih dapat digunakan untuk memprediksi data.  
+  .  
+Untuk memprediksi data di depan dapat digunakan fungsi dari library forecast yakni ```forecast```. Perlu diperhatikan data apa yang akan diprediksi dan model yang akan digunakan. 
+```{r Prediksi, message=FALSE, warning=FALSE,fig.align='center'}
+fc <- forecast(casual, 
+               model=mod_1,
+               h=35)
+summary(fc)
+plot(fc, main = 'Prakiraan Model SARIMA')
+```
+Dapat dilihat bahwa hasil **forecast** untuk 5 periode mengikuti data yang ada meskipun pada data terjadi beberapa lonjakkan yang besar di puncak periodenya. Sehingga dapat disimpoulkan  bahwa model dapat digunakan untuk memprediksi data.  
+
+# Kesimpulan  
+Model yang dipilih untuk memodelkan data banyak orang yang melakukan **bike sharing** di Washington D.C. pada periode Januari 2018-Juli 2018 adalah  $SARIMA (0,0,0) \times (4,1,1)_{7}$ dan memiliki ME sebesar $\approx 49\%$ sehingga model ini cocok digunakan untuk memprediksi data.  
+
+\begin{jp}{}{}
+Lakukan pemodelan musiman untuk data berikut\\
+\begin{center}
+\href{https://drive.google.com/uc?export=download&id=1mYfCjdz7_i6kLLFfmmciqj8HadKPjEV5}{\textcolor{blue}{TEKAN UNTUK MENGUNDUH DATA}}
+\end{center}  
+\end{jp}  
+  
+# Daftar Pustaka  
+Cryer, J., & Chan, K. (2011). Time series analysis. New York: Springer.  
+Wei, W. W. S. (1990). Time series analysis: Univariate and multivariate methods. Redwood City, Calif: Addison-Wesley Pub.  
+\newpage  
+\appendix   
+  
+\begin{center} \Huge \textbf{Lampiran} \normalsize 
+\end{center}
+\section{\textit{Spectral Analysis}}
+\label{spectral}
+\textit{Spectral analysis} adalah suatu metode yang digunakan untuk menemukan suatu pola "tersembunyi" yang terdapat pada data. Idenya adalah dengan mencocokkan data dengan suatu fungsi \textit{cosinus} sebagai berikut:
+\begin{equation}
+\label{cosinus base}
+y_t := R \cos{\left(2 \pi f t + \varPhi \right)}
+\end{equation}
+dengan $y_t$ adalah data ke-$t$, $R$ adalah amplitudo, $f$ adalah frekuensi dan $\varPhi$ adalah fasa.  
+Penaksiran parameter $R$ dan $\varPhi$ dengan menggunakan identitas trigonometri sehingga persamaan (\ref{cosinus base}) dapat ditulis sebagai berikut
+\begin{equation}
+R \cos{\left(2 \pi f t + \varPhi \right)} = A \cos{\left(2 \pi ft\right)} + B \sin{\left(2 \pi ft\right)}
+\end{equation}
+Sehingga dapat diperoleh:
+\begin{align}
+R = \sqrt{A^2 + B^2} \quad \quad \text{ dan } \quad \quad \varPhi = \tan{{}^{-1}\left(-\frac{B}{A}\right)}
+\end{align}
+Nilai $A$ dan $B$ dapat ditaksir dengan menggunakan \textit{Ordinary Least Square Regression}.  
+Nilai $y_t$ dapat pula ditulis dalam bentuk kombinasi linear dari $m$ fungsi kosinus dengan nilai amplitudo, frekuensi dan fasa tertentu seperti persamaan berikut:
+\begin{equation}
+\label{fourier}
+y_t := A_0 + \sum_{j=1}^m \left[A_j \cos{\left(2 \pi f_jt\right)} + B_j \sin{\left(2 \pi f_j t\right)}\right]
+\end{equation}
+Penaksiran nilai parameter dari persamaan (\ref{fourier}) dapat menggunakan \textit{Ordinary Least Square Regression} namun dapat pula dilakukan dengan menggunakan algoritma \textit{Fast Fourier Transform} (FFT). Mengenai algoritma FFT tidak akan dibahas lebih lanjut pada modul ini.  
+Setelah melakukan transformasi Fourier pada data, akan dilihat nilai periodogram dari data. Nilai periodogram ini yang akan digunakan untuk mengindentifikasi frekuensi dominan dari data deret waktu. Sehingga akan dicari frekuensi dengan nilai periodogram yang terbesar.  
+
+Akan diberikan contoh untuk menentukan periode suatu data dengan menggunakan algoritma FFT.  
+```{r Periodogram, echo=TRUE, message=FALSE, warning=FALSE, fig.align= 'center'}
+# Library yang digunakan adalah TSA
+library(TSA)
+
+# Masih menggunakan Data Casual Bike pada contoh sebelumnya
+data <- read_csv("day1.csv", 
+    col_types = cols(dteday = col_date(format = "%m/%d/%Y")))
+ts_data <- ts(data$casual) 
+y_t <- periodogram(ts_data, main = 'Grafik Periodogram dari Data')
+freq <- y_t$freq
+periodogram <- y_t$spec
+```
+Dapat dilihat dari grafik bahwa terdapat 2 nilai periodogram yang signifikan. Terdapat pula suatu hubungan antara Periode, $P$, dengan frekeunsi yaitu:
+\begin{equation}
+P := \frac{1}{f}
+\end{equation}
+Sehingga setelah memperoleh frekuensi yang dominan, yaitu frekuensi dengan nilai periodogram yang terbesar, dapat diperoleh periode yang dominan pula.  
+```{r Frekuensi dan Periodogram}
+# Memperoleh frekuensi yang dominan
+dominan <- freq[which(periodogram %in% sort(periodogram, decreasing = T)[1:2])]
+periode <- 1/dominan
+periode
+```
+Diperoleh Periode sebesar 216 dan 6.97. Dapat dilihat bahwa ukuran data sebesar 212, sehingga lebih masuk akal jika dipilih periode 6.97 sebagai periode yang lebih dominan. Karena data berupa bilangan bulat, maka 6.97 akan dibulatkan menjadi 7.  
+Perhatikan bahwa periode ini juga diperoleh dengan menggunakan grafik ACF pada bagian sebelumnya.  
+\textbf{CATATAN :} Bagian ini menjelaskan \textit{spectral analysis} secara praktis dan ada beberapa konsep yang dilewati agar tidak memperumit pembahasan. Apabila ingin memahami lebih jauh mengenai \textit{spectral analysis}, dianjurkan pada Daftar Pustaka pertama pada Bab 13 \textit{Introduction to Spectral Analysis} dan 14 \textit{Estimating the Spectrum}.  
+\begin{center}
+---- Selesai ----
+\end{center}

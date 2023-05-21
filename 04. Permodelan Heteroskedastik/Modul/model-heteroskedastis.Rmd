@@ -1,0 +1,401 @@
+---
+title: " "
+author: "Leonardo Valentino Kosasih, S.Aktr."
+header-includes:
+    - \usepackage{titling}
+    - \usepackage{tcolorbox}
+    - \tcbuselibrary{listings, theorems}
+    - \usepackage{enumitem}
+    - \usepackage{setspace}\onehalfspacing
+    - \usepackage{fancyhdr}  
+    - \usepackage{hyphenat}
+    - \usepackage{eso-pic,graphicx}  
+    - \usepackage{transparent}
+    - \usepackage{draftwatermark}
+    - \usepackage{amsmath}
+    - \usepackage{hyperref}
+    - \pagestyle{fancy}  
+    - \usepackage{caption}
+    - \usepackage{theorem}
+    - \usepackage[bahasai]{babel}
+    - \fancyhead[LE,RO]{Modul Pratikum Analisis Deret Waktu AK-2281}  
+output: 
+  pdf_document: 
+    toc_depth: 2
+    fig_height: 3
+    fig_width: 4
+    extra_dependencies : awesomebox
+    number_sections: yes
+    fig_caption: yes
+    latex_engine: xelatex
+toc-title: "Daftar Isi"
+classoption: a4paper
+---
+\renewcommand{\theequation}{\thesection.\arabic{equation}}
+\counterwithin{equation}{section}
+\def\figurename{Gambar}
+\pagenumbering{gobble}  
+\newtcbtheorem[auto counter]{jp}{Jurnal Praktikum}{fonttitle=\bfseries\upshape, fontupper=\slshape, arc=0mm, colback=blue!5!white,colframe=blue!75!black}{jurnal}
+<!-- \begin{center} -->
+<!-- \Huge Modul Praktikum Analisis Deret Waktu \\  -->
+<!-- \Huge AK 2281 - Analisis Deret Waktu \\ -->
+<!-- \huge \textbf{Modul 1 - Konsep Dasar Deret Waktu} \\ -->
+<!-- \includegraphics{logo.png} -->
+<!-- \end{center}  -->
+<!-- \begin{center} -->
+<!-- \Large Pengajar : Dr. Sandy Vantika, S.Si., M.Si.  \\ -->
+<!-- \Large Koordinator Praktikum : Leonardo Valentino Kosasih, S.Aktr.    \\ -->
+<!-- \Large Kontak : +62 823 8599 5958  -->
+<!--  \end{center} --> 
+<!-- \SetWatermarkText{" "} -->  
+\hyphenchar\font=-1
+\Large Modul Praktikum Analisis Deret Waktu - AK2281   terdiri atas 5 buah modul sebagai berikut :  \begin{enumerate} 
+\item Modul 1 : Konsep Dasar Deret Waktu  
+\item Modul 2 : Model Data Tak Stasioner  
+\item Modul 3 : Model Musiman  
+\item Modul 4 : Model Heteroskedastik  
+\item Modul 5 : Pengayaan
+\end{enumerate}  
+\begin{tcolorbox}[colback=blue!5!white,colframe=blue!75!black,title = Tim Praktikum AK2281]
+\normalsize Koordinator Praktikum : Leonardo V. Kosasih, S.Aktr. \\
+Tim Penyusun Modul Praktikum :
+\begin{center}
+\begin{tabular}{ lcclc }
+Ang Ditra Alif Pradana & 10120046 & & Matthew Alfarazh & 10820021\\
+Feby Yolanda & 10819028 & & Pamella Cathryn & 10820033\\
+Ferdinan Gratius Budisatya & 10819041 & &Jeremy & 10820034\\
+Jevan Christopher Aryento & 10820010 & &Aloysius Vincent & 10820038\\
+Shelly Delfiani & 10820014 & &Kevin Christ Aditya & 10820039\\ 
+Binsar Gunadi Simbolon & 10820017 & &Shafina Aulia Kusuma Putri & 10820049 \\
+\end{tabular} \\
+\end{center}
+Desain sampul oleh : Matthew Alfarazh - 10820021
+\end{tcolorbox}
+\SetWatermarkText{ \includegraphics[angle=-45]{background.png}}
+\newpage 
+\pagenumbering{roman}
+\tableofcontents
+\newpage
+\setcounter{page}{1}
+\pagenumbering{arabic}
+\begin{center}
+\Huge \textbf{Modul 4}
+\end{center}
+\Large \textbf{Tujuan}:  \normalsize
+\begin{enumerate}
+\item Memahami model deret waktu heteroskedastik
+\item Mengindentifikasi deret waktu heteroskedastik  
+\end{enumerate}
+\normalsize Pada modul kali ini ada beberapa *library* yang akan digunakan yakni sebagai berikut :  
+```{r Library, echo=TRUE, message=FALSE, warning=FALSE}
+# Untuk membaca data dengan format csv
+library(readr) 
+
+# Untuk membersihkan data 
+library(tidyr)
+
+# Untuk mengubah data menjadi Time Series, 
+# membuat plot ACF, plot PACF, Model ARIMA dan ADF Test
+library(tseries)
+
+# Untuk melihat signifikansi koefisien dari parameter
+library(lmtest) 
+
+# Untuk memprediksi data dari model  
+library(forecast)
+
+# Untuk memeriksa adanya sifat heteroskedastik pada data
+library(FinTS)
+
+# Uji Anderson Darling 
+library(nortest)
+
+# Model GARCH
+library(fGarch)
+```
+Sedangkan data yang akan diolah adalah data harga penutupan Doge Coin dari bulan April tahun 2021 hingga akhir bulan November tahun 2021 yang diperoleh dari Yahoo Finance. 
+\begin{center}
+\href{https://drive.google.com/uc?export=download&id=18RIaoXdtLhQ38a7OswJi8rLUpBeTW7fe}{\textcolor{blue}{TEKAN UNTUK MENGUNDUH DATA}}
+\end{center}   
+\newpage    
+\Huge \textbf{Alur Permodelan}  
+\normalsize Secara umum, alur permodelan dapat dibagi menjadi berikut : 
+\begin{enumerate}
+\item EDA (Exploratory Data Analysis) atau Analisis Data
+\item Mempersiapkan data
+\item Identifikasi Model
+\item Estimasi Parameter
+\item Uji Diagnostik  
+\item \textit{Forecasting} / Peramalan
+\end{enumerate}  
+  
+# EDA  
+Pada bagian ini akan dilihat grafik data, dan juga stastik deskriptif dari data  
+```{r Selayang Pandang Data, echo=TRUE, message=FALSE, warning=FALSE, fig.align='center'}
+# Memanggil Data  
+data<- read_csv("DOGE-USD.csv", 
+    col_types = cols(Date = col_date(format = "%m/%d/%Y")))
+
+plot(data$Date,data$Close, type = 'l', 
+     main = 'Harga Doge Coin dari \n April 2021-November 2021', 
+     xlab = 'Tanggal', ylab= 'USD')
+# Membuat garis rataan
+abline(h=mean(data$Close),lwd=2,
+       lty = 2, col ='red') 
+
+# Statistik Deskriptif
+summary(data$Close) 
+```  
+Dapat dilihat terdapat kenaikkan yang besar pada bulan April 2021 dan lagi pada bulan Mei 2021 yang disusul dengan penurnan harga hingga April 2022. Data yang akan dimodelkan adalah data log-return yang didefinisikan dengan :  
+$$
+r_t = \log{\frac{y_{t+1}}{y_t}} = \log{y_{t+1}} - \log{y_t}, \quad t = 1, \dots 243
+$$
+Sehingga diperoleh  
+```{r Selayang Pandang Data ACF, echo=TRUE, message=FALSE, warning=FALSE, fig.align='center'}
+ts_data <- ts(diff(log(data$Close)))
+plot(ts_data, type = 'l', 
+     main = 'Harga Doge Coin dari \n April 2021-November 2021', 
+     xlab = 'Tanggal', ylab= 'USD')
+# Membuat garis rataan
+abline(h=mean(ts_data),lwd=2,lty = 2, col ='red') 
+
+# Statistik Deskriptif
+summary(ts_data) 
+```  
+Jika dimodelkan dengan model ARIMA maka dapat diperoleh model sebagai berikut :  
+```{r stasioner log, echo=TRUE, fig.align='center'}
+acf(ts_data, main = 'ACF Harga Doge Coin', lag.max = 36)
+adf.test(ts_data)
+```
+Dapat dilihat bahwa hasil uji ADF diperoleh $p-value < \alpha = 5%$. Maka data tidak perlu diferensiasi dan dapat langsung ditentukan modelnya.  
+  
+```{r Diff ACF, echo=TRUE, message=FALSE, warning=FALSE, fig.align='center'}
+ts_train <- ts_data[1:(floor(0.8*length(ts_data)))]
+ts_validation <- ts_data[ceiling(0.8*length(ts_data)): length(ts_data)]
+acf(ts_train, main = 'ACF Data', lag.max = 36)
+```  
+```{r Diff PACF, echo=TRUE, fig.align='center', message=FALSE, warning=FALSE}
+pacf(ts_train, main = 'PACF Data', lag.max = 36)
+```  
+
+apat dilihat bahwa tidak ada model yang cocok untuk memodelkan data. Misalkan akan dimodelkan dengan AIC yang terendah maka dengan fungsi ```auto.arima``` diperoleh hasil berikut :   
+```{r Forecast, echo=TRUE, message=FALSE, warning=FALSE, fig.align='center'}
+mod <- auto.arima(ts_data, max.q = 0,allowmean = TRUE, allowdrift = TRUE, method = "ML")
+fc <- forecast(ts_data, model=mod, h=10)
+plot(fc)
+```
+\begin{jp}{}{}
+Apakah data yang mengikuti model ARIMA (0,0,0) pada data \textit{return} adalah suatu hal yang tidak wajar ? Berikan alasan anda !
+\end{jp}
+  
+Pada grafik **forecast** dapat dilihat bahwa prediksi data seperti garis linear saja yang tidak menangkap efek keacakkan dari data. Tentu saja hal ini bukanlah hal yang diinginkan dari model.   
+
+```{r Residual, echo=TRUE, message=FALSE, warning=FALSE, fig.align='center', fig.cap='Grafik Uji Diagnostik'}
+checkresiduals(mod)
+```
+
+Dapat dilihat dari grafik histogram bahwa data tidak berdistribusi normal namun dari grafik ACF dapat muncul dugaan bahwa galat tidak saling bebas, hal ini didukung uji statistik Ljung-Box yang nilai $p-value > \alpha$ sehingga diperoleh bahwa data tidak saling bebas.  
+
+# Model Heteroskedastis  
+Berbeda dengan permodelan yang telah dipelajari sebelumnya, model heteroskedastis akan memodelkan variansi bersyarat pada data. Hal ini dapat dilakukan secara \textbf{independen} (tanpa perlu menentukan model ARIMA ataupun SARIMA dari data) dan dapat pula \textbf{digabung} dengan model yang sudah ada. Model Heteroskedastis ini digunakan untuk mengatasi galat/residual data yang gagal dalam uji diagnostik.  
+
+Akan dikaji lebih lanjut apakah residual dari data mengikuti distribusi normal
+```{r Selayang Pandang Data QQ, echo=TRUE, message=FALSE, warning=FALSE, fig.align='center'}
+residual <- residuals(mod,standardize=T)
+
+# QQPlot
+set.seed(1602)
+qqplot(rnorm(n = length(residual)), residual)
+qqline(residual)
+
+# Saphiro Wilk Test
+shapiro.test(residual)
+
+# Anderson Darling 
+ad.test(residual)
+```  
+Dapat dilihat dari hasil uji Shapiro-Wilk dan Anderson Darling $p-value < \alpha$ sehingga dapat disimpulkan bahwa data residual  **tidak berdistribusi normal**. Hal ini juga didukung dari QQ - plot yang tidak berada pada garis miring.  
+
+Berikutnya akan diperiksa adanya heteroskedastis bersyarat atau yang akan disebut dengan uji ARCH pada residu. Statistik uji yang dapat dilakukan adalah uji Ljung-Box dan uji \textit{Lagrangre Multiplier}, data yang akan diuji adalah data residu kuadrat.  
+\begin{jp}{}{}
+Tulislah $H_0$ dan $H_a$ dari uji \textit{Lagrangre Multiplier}
+\end{jp}
+```{r residuu, echo=TRUE, message=FALSE, warning=FALSE, fig.align='center'}
+resid2 <- residual^2
+plot(resid2, main = "Grafik Galat Kuadrat", type = 'l')
+Box.test(resid2, lag = 12)
+ArchTest(residual)
+```  
+\begin{jp}{}{}
+Mengapa pada uji Ljung Box data harus dikuadratkan sedangkan \texttt{ArchTest} tidak ?  
+\end{jp}
+Dari uji statistik yang dilakukan dilihat bahwa $p-value < \alpha$ sehingga dapat disimpulkan bahwa data residual memiliki efek ARCH.  
+
+Berikutnya akan ditentukan model yang cocok pada data residual.  
+
+# Penentuan Model  
+Secara umum, model GARCH ($p,q$) dapat ditulis dengan persamaan berikut:  
+\begin{equation}
+\sigma_{t|t-1}^2 = \omega + \beta_1\sigma_{t-1|t-2}^2 + \dots + \beta_p\sigma_{t-p|t-p-1}^2 + \alpha_1 r_{t-1}^2 + \alpha_2 r_{t-2}^2 + \dots + \alpha_q r_{t-q}^2
+\end{equation}
+dengan $\sigma_{t|t-1}^2$ adalah variansi bersyarat dari data $r_t$.  
+\textbf{Catatan:} 
+\begin{enumerate}
+\item Terdapat perbedaan pendifinisian model GARCH pada \textit{library} tertentu. Ada yang menggunakan pendefinisian GARCH($p,q$) dan ada juga yang menggunakan GARCH($q,p$).
+\item Persamaan GARCH($p,q$) dapat ditulis menjadi suatu bentuk yang serupa dengan model ARMA($\max{\{p,q\}}, p$). 
+\end{enumerate}
+Dalam menentukan model yang cocok, grafik ACF akan menentukan parameter $q$ dari model GARCH ($p,q$). Sedangkan grafik PACF akan menentukan parameter $p$ dari GARCH ($p,q$).    
+```{r acf pacf galat, echo=TRUE, message=FALSE, warning=FALSE, fig.align='center', fig.cap='ACF Residu'}
+acf(resid2, main = 'ACF Residu Kuadrat', lag.max = 36)
+pacf(resid2, main = 'PACF Residu Kuadrat', lag.max = 36)
+```
+Dari grafik diperoleh model yang cocok adalah :  
+1. GARCH(3,1)  
+2. GARCH(3,0)  
+3. GARCH(1,1)  (Dipilih karena parsimoni)
+```{r model candidate, warning=FALSE}
+mod_h1 <- garchFit(residual~garch(3,1), data = residual,
+                   trace=F, include.mean = F)
+summary(mod_h1)
+
+mod_h2 <- garchFit(residual~garch(3,0), data = residual,
+                   trace=F, include.mean = F)
+summary(mod_h2)
+
+mod_h3 <- garchFit(residual~garch(1,1), data = residual,
+                   trace=F, include.mean = F)
+summary(mod_h3)
+```
+Dapat dilihat bahwa model GARCH(1,1) memiliki AIC yang paling kecil dengan parameter yang paling sedikit sehingga akan digunakan model GARCH(1,1) untuk memodelkan data. Sehingga diperoleh persamaan model sebagai berikut:
+\begin{align}
+\sigma^2_{t|t-1} &:= \omega + \beta_1\sigma^2_{t-1|t-2} + \alpha_1 r_{t-1}^2 \nonumber \\
+&= 0.0016872 + 0.5734003 \sigma^2_{t-1|t-2} + 0.2396254 r_{t-1}^2 
+\end{align} 
+Sehingga diperoleh model gabungan ARMA(0,0) dan GARCH(1,1) sebagai berikut:
+\begin{align}
+r_t := \varepsilon_t &= \sigma_{t|t-1} z_t \text{(Mengapa?)} \nonumber \\
+&= \sqrt{0.0016872 + 0.5734003 \sigma^2_{t-1|t-2} + 0.2396254 r_{t-1}^2} z_t
+\end{align}
+dengan $z_t \sim N(0,1)$.
+(Pelajari juga modul ```rugarch``` untuk memodelkan model GARCH).  
+  
+# *Forecast*   
+Pada bagian ini akan dilakukan *forecasting* dengan model gabungan ARMA(0,0) dengan GARCH(1,1)   
+
+```{r mixed model, echo=TRUE, warning=FALSE}
+m1 <- garchFit(ts_data ~ arma(0,0)+garch(1,1),data=ts_data,trace=F)
+summary(m1)
+```
+```{r forecast data, fig.align='center', fig.height=9, fig.width=12}
+fc_h <- predict(m1, n.ahead = 10, plot=TRUE, conf=.95, nx = length(ts_data))
+fc_h
+```
+Berbeda dengan model yang sebelumnya dapat dilihat dari selang kepercayaannya bahwa model GARCH jauh dapat memodelkan variansi dari data. 
+
+# Kesimpulan  
+Seringkali model yang digunakan tidak dapat memodelkan variansi / risiko di masa depan. Sehingga diperlukan model baru yang dapat membantu memprediksi variansi dari prakiraan di masa depan.  
+
+# Pengayaan: Valuasi Harga Opsi Dengan Simulasi Monte Carlo    
+Pada bagian ini akan dilakukan simulasi harga \textit{cryptocurrency} yang akan digunakan untuk melakukan valuasi harga opsi di suatu waktu di masa depan dengan melakukan simulasi monte carlo. Harga sekuritas akan dimodelkan dengan model yang telah dibuat sebelumnya dan harga opsi akan divaluasi menggunakan persamaan \textit{Black-Scholes}. Tujuan dari bagian ini hanya untuk memperkenalkan secara singkat dan praktis mengenai aplikasi dari suatu model deret waktu. Pembaca sangat disarankan untuk mempelajari lebih lanjut bagian-bagian yang ditulis pada bagian ini.    
+
+## Simulasi Monte Carlo  
+Simulasi monte carlo adalah suatu simulasi yang menggunakan bilangan acak. Ide dari metode ini adalah dengan membangkitkan bilangan acak dalam jumlah besar untuk menaksir secara empiris nilai statistik yang diinginkan seperti, rataan, standar deviasi, kuartil atas ataupun nilai statistik lainnya. Pada bagian ini akan dilakukan 1 simulasi dengan ukuran simulasi sebesar 1000. Untuk menaksir nilai harga \textit{cryptocurrency} untuk $r_t$ dengan $t = 244, 245, \dots, 253$.  
+```{r Inisialisasi Simulasi Monte Carlo}
+# Inisialisasi variabel untuk simulasi
+data_return <- diff(log(data$Close))
+sd_return <- sd(data_return)
+omega <- mod_h3@fit$matcoef[1]
+alpha_1 <- mod_h3@fit$matcoef[2]
+beta_1 <- mod_h3@fit$matcoef[3]
+garch_11 <- function(sd_data_prev, data_prev){
+  sigma_t <- sqrt(omega + alpha_1 * data_prev^2 + beta_1 * sd_data_prev^2)
+  data_t <- sigma_t*rnorm(n = 1, mean = 0, sd = 1)
+  return (list(sigma_new = sigma_t, data_new = data_t))
+}
+```
+```{r Simulasi Monte Carlo}
+hasil_simulasi <- matrix(0, 1000, 10) # Menyimpan data pada matriks
+for (ukuran_simulasi in 1:1000){
+  data_sim <- tail(data_return, n = 1) 
+  sd_sim <- sd(data_return)
+  for (t in 244:253){
+    garch_sim <- garch_11(sd_sim, tail(data_sim, n =1))
+    sd_sim <- garch_sim$sigma_new
+    data_sim <- c(data_sim, garch_sim$data_new)
+  }
+  dummy <- tail(data_sim, n = 10)
+  hasil_simulasi[ukuran_simulasi, 1:10] <- dummy
+  }
+```
+## Analisis Simulasi Monte Carlo 
+Pada bagian ini akan dihitung beberapa nilai statistik yang dipandang penting pada simulasi, di antaranya adalah:
+\begin{enumerate}
+\item Rataan
+\item Standar Deviasi
+\item Median 
+\item Persentil ke-90
+\item Persentil ke-95
+\end{enumerate}
+```{r}
+statistik <- data.frame(row.names = c('Rataan', 'Stdev', 'Median', 
+                                      'Persentil90', 'Persentil95'))
+for (i in 1:10){
+  statistik[1, i] <- mean(hasil_simulasi[1:1000, i])
+  statistik[2, i] <- sd(hasil_simulasi[1:1000, i])
+  statistik[3, i] <- median(hasil_simulasi[1:1000, i])
+  statistik[4, i] <- quantile(hasil_simulasi[1:1000, i], probs = 0.9)
+  statistik[5, i] <- quantile(hasil_simulasi[1:1000, i], probs = 0.95) 
+}
+statistik
+```
+Nantinya akan digunakan nilai-nilai pada tabel di atas untuk melakukan valuasi opsi.  
+  
+## Persamaan *Black-Scholes*
+Opsi adalah suatu instrumen keuangan yang nilainya bergantung pada suatu produk sekuritas lainnya, contohnya adalah saham atau pada pemodelan kali ini adalah suatu \textit{cryptocurrency} yaitu Doge Coin. Pada pembahasan ini, akan dibahas mengenai opsi saham khususnya \textit{European Option}. Terdapat 2 jenis opsi yaitu opsi \textbf{call} dan opsi \textbf{put}. Opsi call adalah suatu hak untuk menjual suatu saham dengan harga tertentu yang disebut dengan \textit{strike price} yang dinotasikan dengan $K$.  
+Dalam penilaian suatu opsi, digunakan suatu persamaan yang dikenal dengan \textit{Black-Scholes Formula} yang didefinisikan sebagai berikut:  
+\begin{equation}
+C(S_t, t) = N(d_1) S_t - N(d_2)K\exp(-r(T-t))
+\end{equation}
+dengan 
+\begin{enumerate}
+\item $S_t$: harga Doge Coin pada saat $t$;
+\item $N(\cdot)$: fungsi distribusi kumulatif normal baku;  
+\item $d_1 = \frac{\ln\left(\frac{S_t}{K}\right)+\left(r + \frac{\sigma^2}{2}\right)(T-t)}{\sigma\sqrt{T-t}}$;
+\item $d_2 = d1 - \sigma \sqrt{T-t}$;  
+\item $\sigma$: volatilitas atau standar deviasi dari harga Doge Coin, pada data diperoleh standar deviasi sebesar 0.09835049;
+\item $K$: \textit{Strike Price}, diasumsikan $K = 0.03$;
+\item $T$: waktu tenor, diasumsikan $T = 253$;
+\item $r$: \textit{risk-free interest rate} atau suku bunga tak berisiko, dan diasumsikan $r = 1\%$
+\end{enumerate}  
+Maka dapat diperoleh nilai harga opsi call untuk $t = 1$ adalah sebagai berikut:  
+\begin{align*}
+d_1 &= \frac{\ln\left(\frac{0.0620}{0.03}\right)+\left(0.01 + \frac{0.09835049^2}{2}\right)\left(\frac{253-1}{365.25}\right)}{0.09835049\sqrt{\frac{253-1}{365.25}}} =  9.052372\\
+d_2 &= 1.452339 - 0.09835049\sqrt{\frac{253-1}{365.25}} = 8.97068 \\ 
+C(0.0620, 1) &= N(9.052372)0.0620 - N(8.97068) (0.03) \exp{\left(-0.01\frac{(253-1)}{365.25}\right)} \\ 
+&\approx 0.062 - 0.03 (0.9931244) = 0.03220627
+\end{align*}
+Berikutnya akan dilakukan valuasi dari harga opsi untuk $t = 244, 245, \dots, 253$.  
+Perhatikan bahwa data yang disimulasikan berupa selisih antara nilai logaritma natural dari harga Doge Coin pada waktu $t$ dengan nilai logaritma natural dari harga Doge Coin pada waktu $t-1$. Karena dalam valuasi opsi nanti diperlukan harga dari Doge Coin, maka akan dilakukan transformasi terlebih dahulu. Perhatikan bahwa
+\begin{align*}
+\hat{r}_{244} &= \log{\hat{y}_{245}} - \log{y_{244}} \\
+\Leftrightarrow \hat{y}_{245} &= \exp(\hat{r}_{244} + \log{y_{244}}) \\
+&= \exp(0.0020050772 + \log{0.214715}) = 0.2151459
+\end{align*}
+Sehingga dengan menggunakan cara yang sama dengan sebelumnya dapat diperoleh
+\begin{align*}
+d_1 &= \frac{\ln\left(\frac{0.2151459}{0.03}\right)+\left(0.01 + \frac{0.09835049^2}{2}\right)\left(\frac{253-244}{365.25}\right)}{0.09835049\sqrt{\frac{253-244}{365.25}}} =  \text{diserahkan kepada pembaca sebagai latihan}\\
+d_2 &= \text{diserahkan kepada pembaca sebagai latihan} \\ 
+C(0.2151459, 244) &= \text{diserahkan kepada pembaca sebagai latihan}
+\end{align*}
+\textbf{Catatan:} Tentu saja anda dianjurkan untuk dapat membuat kode untuk menghitung opsi tersebut agar tidak menyulitkan anda dalam mengerjakan jurnal praktikum berikut.  
+\begin{jp}{}{}
+Hitunglah harga Opsi untuk $t = 245, 246, \dots, 253$! \textit{Hint}: anda cukup mengganti nilai $S_t$ dan $t$ untuk tiap valuasinya.  
+\end{jp}  
+
+# Daftar Pustaka  
+Cryer, J., & Chan, K. (2011). Time Series Analysis. New York: Springer.  
+Tsay, R. S. (2002). Analysis of Financial Time Series. New York: Wiley  
+Ross, S. M. (1999). An Introduction to Mathematical Finance. Cambridge University Press  
+\begin{center}
+---- Selesai ----
+\end{center}
